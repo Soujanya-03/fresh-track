@@ -1,0 +1,1280 @@
+ <!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fresh Track — Stop Food Waste, Start Sharing</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        fresh: { 400:'#4ade80', 500:'#22c55e', 600:'#16a34a', 700:'#15803d' },
+                        warn: { 400:'#fbbf24', 500:'#f59e0b' },
+                        danger: { 400:'#f87171', 500:'#ef4444' },
+                    },
+                    fontFamily: {
+                        display: ['Space Grotesk','sans-serif'],
+                        body: ['Inter','sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Inter',sans-serif;background:#0A0A0A;color:#fff;overflow-x:hidden}
+        .font-display{font-family:'Space Grotesk',sans-serif}
+        ::-webkit-scrollbar{width:6px}
+        ::-webkit-scrollbar-track{background:#0A0A0A}
+        ::-webkit-scrollbar-thumb{background:#262626;border-radius:3px}
+
+        /* Hero gradient animation */
+        .hero-bg{background:radial-gradient(ellipse at 20% 50%,rgba(34,197,94,0.08) 0%,transparent 50%),radial-gradient(ellipse at 80% 20%,rgba(34,197,94,0.05) 0%,transparent 50%),radial-gradient(ellipse at 50% 80%,rgba(22,163,74,0.06) 0%,transparent 50%),#0A0A0A}
+
+        /* Floating orbs */
+        .orb{position:absolute;border-radius:50%;filter:blur(80px);animation:float 8s ease-in-out infinite}
+        .orb-1{width:400px;height:400px;background:rgba(34,197,94,0.1);top:-100px;left:-100px;animation-delay:0s}
+        .orb-2{width:300px;height:300px;background:rgba(34,197,94,0.07);bottom:-50px;right:-50px;animation-delay:3s}
+        .orb-3{width:200px;height:200px;background:rgba(74,222,128,0.05);top:40%;left:60%;animation-delay:5s}
+        @keyframes float{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(30px,-20px) scale(1.05)}66%{transform:translate(-20px,15px) scale(0.95)}}
+
+        /* Glass card */
+        .glass{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);backdrop-filter:blur(12px);transition:all .4s ease}
+        .glass:hover{background:rgba(255,255,255,0.07);border-color:rgba(34,197,94,0.2);transform:translateY(-4px)}
+
+        /* Pulse for warning */
+        .pulse-warn{animation:pulseWarn 2s ease-in-out infinite}
+        @keyframes pulseWarn{0%,100%{box-shadow:0 0 0 0 rgba(245,158,11,0.3)}50%{box-shadow:0 0 0 8px rgba(245,158,11,0)}}
+
+        /* Scan line animation */
+        .scan-line{position:absolute;left:0;width:100%;height:3px;background:linear-gradient(90deg,transparent,#22c55e,transparent);animation:scanDown 2s ease-in-out infinite}
+        @keyframes scanDown{0%{top:0;opacity:0}10%{opacity:1}90%{opacity:1}100%{top:100%;opacity:0}}
+
+        /* Reveal animation */
+        .reveal{opacity:0;transform:translateY(40px);transition:all .8s cubic-bezier(.16,1,.3,1)}
+        .reveal.active{opacity:1;transform:translateY(0)}
+
+        /* Tab active */
+        .tab-btn{position:relative;transition:all .3s}
+        .tab-btn.active{color:#22c55e}
+        .tab-btn.active::after{content:'';position:absolute;bottom:-2px;left:0;width:100%;height:2px;background:#22c55e;border-radius:1px}
+
+        /* Toast */
+        .toast{transform:translateX(120%);transition:transform .4s cubic-bezier(.16,1,.3,1)}
+        .toast.show{transform:translateX(0)}
+
+        /* Modal */
+        .modal-overlay{opacity:0;pointer-events:none;transition:opacity .3s}
+        .modal-overlay.open{opacity:1;pointer-events:auto}
+        .modal-overlay.open .modal-content{transform:scale(1);opacity:1}
+        .modal-content{transform:scale(.95);opacity:0;transition:all .3s cubic-bezier(.16,1,.3,1)}
+
+        /* Phone mockup */
+        .phone-frame{width:260px;height:520px;border-radius:36px;border:3px solid rgba(255,255,255,0.15);background:#111;overflow:hidden;position:relative;box-shadow:0 40px 80px rgba(0,0,0,0.5),0 0 60px rgba(34,197,94,0.08)}
+        .phone-notch{width:120px;height:28px;background:#111;border-radius:0 0 16px 16px;position:absolute;top:0;left:50%;transform:translateX(-50%);z-index:10}
+
+        /* Status badges */
+        .badge-good{background:rgba(34,197,94,0.15);color:#4ade80;border:1px solid rgba(34,197,94,0.3)}
+        .badge-warn{background:rgba(245,158,11,0.15);color:#fbbf24;border:1px solid rgba(245,158,11,0.3)}
+        .badge-expired{background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.3)}
+
+        /* Button glow */
+        .btn-glow{position:relative;overflow:hidden}
+        .btn-glow::before{content:'';position:absolute;top:50%;left:50%;width:0;height:0;background:rgba(255,255,255,0.15);border-radius:50%;transform:translate(-50%,-50%);transition:width .6s,height .6s}
+        .btn-glow:hover::before{width:300px;height:300px}
+
+        /* Stat counter */
+        .stat-num{background:linear-gradient(135deg,#4ade80,#22c55e);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+
+        /* Noise texture */
+        .noise::before{content:'';position:fixed;top:0;left:0;width:100%;height:100%;opacity:.03;pointer-events:none;z-index:9999;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+        .product-row{transition:all .3s ease}
+        .product-row:hover{background:rgba(255,255,255,0.03)}
+    </style>
+</head>
+<body class="noise">
+
+<!-- Toast Container -->
+<div id="toastContainer" class="fixed top-6 right-6 z-[100] flex flex-col gap-3"></div>
+
+<!-- Navigation -->
+<nav id="navbar" class="fixed top-0 left-0 right-0 z-50 transition-all duration-500">
+    <div class="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between">
+        <a href="#" class="flex items-center gap-2">
+            <div class="w-9 h-9 rounded-xl bg-fresh-500/20 border border-fresh-500/30 flex items-center justify-center">
+                <iconify-icon icon="solar:leaf-bold" class="text-fresh-400 text-lg"></iconify-icon>
+            </div>
+            <span class="font-display font-bold text-lg tracking-tight">Fresh<span class="text-fresh-400">Track</span></span>
+        </a>
+        <div class="hidden md:flex items-center gap-8">
+            <a href="#problem" class="text-sm text-neutral-400 hover:text-white transition-colors">Problem</a>
+            <a href="#features" class="text-sm text-neutral-400 hover:text-white transition-colors">Features</a>
+            <a href="#how" class="text-sm text-neutral-400 hover:text-white transition-colors">How It Works</a>
+            <a href="#dashboard" class="text-sm text-neutral-400 hover:text-white transition-colors">Dashboard</a>
+            <a href="#impact" class="text-sm text-neutral-400 hover:text-white transition-colors">Impact</a>
+        </div>
+        <div class="flex items-center gap-3">
+            <a href="#dashboard" class="hidden sm:inline-flex btn-glow bg-fresh-500 hover:bg-fresh-600 text-black font-semibold text-sm px-5 py-2.5 rounded-full transition-colors">
+                Launch App
+            </a>
+            <button id="mobileMenuBtn" class="md:hidden w-10 h-10 rounded-xl border border-white/10 flex items-center justify-center hover:bg-white/5 transition">
+                <iconify-icon icon="solar:hamburger-menu-linear" class="text-xl"></iconify-icon>
+            </button>
+        </div>
+    </div>
+    <!-- Mobile Menu -->
+    <div id="mobileMenu" class="hidden md:hidden border-t border-white/5 bg-black/90 backdrop-blur-xl">
+        <div class="px-6 py-4 flex flex-col gap-3">
+            <a href="#problem" class="text-sm text-neutral-400 hover:text-white py-2 mobile-link">Problem</a>
+            <a href="#features" class="text-sm text-neutral-400 hover:text-white py-2 mobile-link">Features</a>
+            <a href="#how" class="text-sm text-neutral-400 hover:text-white py-2 mobile-link">How It Works</a>
+            <a href="#dashboard" class="text-sm text-neutral-400 hover:text-white py-2 mobile-link">Dashboard</a>
+            <a href="#impact" class="text-sm text-neutral-400 hover:text-white py-2 mobile-link">Impact</a>
+        </div>
+    </div>
+</nav>
+
+<!-- ===== HERO ===== -->
+<section class="hero-bg min-h-screen flex items-center justify-center relative overflow-hidden pt-20">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="max-w-7xl mx-auto px-6 flex flex-col lg:flex-row items-center gap-16 relative z-10">
+        <!-- Left Content -->
+        <div class="flex-1 text-center lg:text-left">
+            <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-fresh-500/20 bg-fresh-500/5 mb-8">
+                <span class="w-2 h-2 rounded-full bg-fresh-400 animate-pulse"></span>
+                <span class="text-xs font-medium text-fresh-400 tracking-wider uppercase">MIRAETHON 2K26 • Health & Wellness</span>
+            </div>
+            <h1 class="font-display text-5xl sm:text-6xl lg:text-7xl font-bold leading-[1.05] tracking-tight mb-6">
+                Stop Food<br>
+                <span class="relative inline-block">
+                    <span class="text-fresh-400">Waste.</span>
+                    <svg class="absolute -bottom-2 left-0 w-full" viewBox="0 0 200 12" fill="none"><path d="M2 8c40-6 80-6 196 0" stroke="#22c55e" stroke-width="3" stroke-linecap="round" opacity="0.4"/></svg>
+                </span>
+                <br>Start <span class="text-neutral-400">Sharing.</span>
+            </h1>
+            <p class="text-neutral-400 text-lg sm:text-xl font-light leading-relaxed max-w-lg mx-auto lg:mx-0 mb-10">
+                Fresh Track scans expiry dates, sends smart alerts, and connects you with neighbours to share food before it's wasted.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                <a href="#dashboard" class="btn-glow bg-fresh-500 hover:bg-fresh-600 text-black font-semibold px-8 py-4 rounded-full transition-colors text-center">
+                    Start Tracking Free
+                </a>
+                <a href="#how" class="border border-white/15 hover:border-fresh-500/40 hover:bg-fresh-500/5 text-white font-medium px-8 py-4 rounded-full transition-all text-center">
+                    See How It Works
+                </a>
+            </div>
+            <div class="flex items-center gap-8 mt-10 justify-center lg:justify-start">
+                <div><span class="stat-num font-display text-2xl font-bold">100%</span><p class="text-xs text-neutral-500 mt-1">Client-Side</p></div>
+                <div class="w-px h-10 bg-white/10"></div>
+                <div><span class="stat-num font-display text-2xl font-bold">Zero</span><p class="text-xs text-neutral-500 mt-1">Install Required</p></div>
+                <div class="w-px h-10 bg-white/10"></div>
+                <div><span class="stat-num font-display text-2xl font-bold">Free</span><p class="text-xs text-neutral-500 mt-1">For Households</p></div>
+            </div>
+        </div>
+        <!-- Right: Phone Mockup -->
+        <div class="flex-shrink-0 relative">
+            <div class="phone-frame">
+                <div class="phone-notch"></div>
+                <div class="p-4 pt-10 h-full flex flex-col">
+                    <p class="text-[10px] text-neutral-500 mb-1">My Kitchen</p>
+                    <p class="font-display font-bold text-sm mb-3">8 Products Tracked</p>
+                    <div class="space-y-2 flex-1 overflow-hidden">
+                        <div class="bg-fresh-500/10 border border-fresh-500/20 rounded-xl p-2.5 flex items-center gap-2.5">
+                            <div class="w-8 h-8 rounded-lg bg-fresh-500/20 flex items-center justify-center text-xs">🧈</div>
+                            <div class="flex-1 min-w-0"><p class="text-[11px] font-semibold truncate">Amul Butter</p><p class="text-[9px] text-neutral-500">Exp: 18 Jul 2025</p></div>
+                            <span class="text-[8px] font-bold px-2 py-0.5 rounded-full badge-good">GOOD</span>
+                        </div>
+                        <div class="bg-warn-500/10 border border-warn-500/20 rounded-xl p-2.5 flex items-center gap-2.5">
+                            <div class="w-8 h-8 rounded-lg bg-warn-500/20 flex items-center justify-center text-xs">🍜</div>
+                            <div class="flex-1 min-w-0"><p class="text-[11px] font-semibold truncate">Maggi Noodles</p><p class="text-[9px] text-neutral-500">Exp: 06 Jul 2025</p></div>
+                            <span class="text-[8px] font-bold px-2 py-0.5 rounded-full badge-warn pulse-warn">WARN</span>
+                        </div>
+                        <div class="bg-fresh-500/10 border border-fresh-500/20 rounded-xl p-2.5 flex items-center gap-2.5">
+                            <div class="w-8 h-8 rounded-lg bg-fresh-500/20 flex items-center justify-center text-xs">🌾</div>
+                            <div class="flex-1 min-w-0"><p class="text-[11px] font-semibold truncate">Aashirvaad Atta</p><p class="text-[9px] text-neutral-500">Exp: 25 Aug 2025</p></div>
+                            <span class="text-[8px] font-bold px-2 py-0.5 rounded-full badge-good">GOOD</span>
+                        </div>
+                        <div class="bg-danger-500/10 border border-danger-500/20 rounded-xl p-2.5 flex items-center gap-2.5">
+                            <div class="w-8 h-8 rounded-lg bg-danger-500/20 flex items-center justify-center text-xs">🍵</div>
+                            <div class="flex-1 min-w-0"><p class="text-[11px] font-semibold truncate">Tetley Green Tea</p><p class="text-[9px] text-neutral-500">Exp: 20 Jun 2025</p></div>
+                            <span class="text-[8px] font-bold px-2 py-0.5 rounded-full badge-expired">EXPIRED</span>
+                        </div>
+                        <div class="bg-warn-500/10 border border-warn-500/20 rounded-xl p-2.5 flex items-center gap-2.5">
+                            <div class="w-8 h-8 rounded-lg bg-warn-500/20 flex items-center justify-center text-xs">🍛</div>
+                            <div class="flex-1 min-w-0"><p class="text-[11px] font-semibold truncate">MTR Ready Mix</p><p class="text-[9px] text-neutral-500">Exp: 08 Jul 2025</p></div>
+                            <span class="text-[8px] font-bold px-2 py-0.5 rounded-full badge-warn pulse-warn">WARN</span>
+                        </div>
+                    </div>
+                    <div class="mt-2 bg-fresh-500 rounded-xl py-2 text-center text-[10px] font-bold text-black">+ Scan New Item</div>
+                </div>
+            </div>
+            <!-- Floating badges -->
+            <div class="absolute -left-16 top-24 glass rounded-2xl px-4 py-3 animate-bounce" style="animation-duration:3s">
+                <div class="flex items-center gap-2">
+                    <iconify-icon icon="solar:bell-bing-bold" class="text-warn-400 text-lg"></iconify-icon>
+                    <div><p class="text-[10px] font-semibold">Expiry Alert!</p><p class="text-[9px] text-neutral-500">Maggi in 3 days</p></div>
+                </div>
+            </div>
+            <div class="absolute -right-12 bottom-32 glass rounded-2xl px-4 py-3 animate-bounce" style="animation-duration:4s;animation-delay:1s">
+                <div class="flex items-center gap-2">
+                    <iconify-icon icon="solar:hand-heart-bold" class="text-fresh-400 text-lg"></iconify-icon>
+                    <div><p class="text-[10px] font-semibold">Donated!</p><p class="text-[9px] text-neutral-500">Butter shared nearby</p></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Scroll indicator -->
+    <div class="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 animate-bounce">
+        <span class="text-[10px] text-neutral-600 uppercase tracking-widest">Scroll</span>
+        <iconify-icon icon="solar:arrow-down-linear" class="text-neutral-600"></iconify-icon>
+    </div>
+</section>
+
+<!-- ===== PROBLEM ===== -->
+<section id="problem" class="py-32 relative">
+    <div class="max-w-7xl mx-auto px-6">
+        <div class="text-center mb-16 reveal">
+            <span class="text-xs font-semibold text-fresh-400 uppercase tracking-[0.25em] mb-4 block">The Problem</span>
+            <h2 class="font-display text-4xl sm:text-5xl font-bold tracking-tight mb-4">1.3 Billion Tonnes <span class="text-neutral-500">Wasted</span></h2>
+            <p class="text-neutral-400 text-lg font-light max-w-2xl mx-auto">Every year. Worth over ₹92,000 crore in India alone. And it starts in our own kitchens.</p>
+        </div>
+        <div class="grid md:grid-cols-3 gap-6">
+            <div class="glass rounded-2xl p-8 reveal" style="transition-delay:.1s">
+                <div class="w-14 h-14 rounded-2xl bg-danger-500/10 border border-danger-500/20 flex items-center justify-center mb-6">
+                    <iconify-icon icon="solar:users-group-rounded-bold" class="text-danger-400 text-2xl"></iconify-icon>
+                </div>
+                <h3 class="font-display font-bold text-xl mb-3">Who Is Affected</h3>
+                <p class="text-neutral-400 text-sm leading-relaxed">Households and families whose kitchens pile up with groceries but have no central record of purchase or expiry dates.</p>
+            </div>
+            <div class="glass rounded-2xl p-8 reveal" style="transition-delay:.2s">
+                <div class="w-14 h-14 rounded-2xl bg-warn-500/10 border border-warn-500/20 flex items-center justify-center mb-6">
+                    <iconify-icon icon="solar:magnifer-broken" class="text-warn-400 text-2xl"></iconify-icon>
+                </div>
+                <h3 class="font-display font-bold text-xl mb-3">The Current Gap</h3>
+                <p class="text-neutral-400 text-sm leading-relaxed">Printed dates are small, faded, or easy to misread. No reminder system means items are only noticed once they've already spoiled.</p>
+            </div>
+            <div class="glass rounded-2xl p-8 reveal" style="transition-delay:.3s">
+                <div class="w-14 h-14 rounded-2xl bg-fresh-500/10 border border-fresh-500/20 flex items-center justify-center mb-6">
+                    <iconify-icon icon="solar:clock-circle-bold" class="text-fresh-400 text-2xl"></iconify-icon>
+                </div>
+                <h3 class="font-display font-bold text-xl mb-3">Why It Matters Now</h3>
+                <p class="text-neutral-400 text-sm leading-relaxed">Almost no household has an easy way to track expiry dates. Still-usable near-expiry products get thrown away instead of shared.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===== FEATURES ===== -->
+<section id="features" class="py-32 relative">
+    <div class="absolute inset-0 bg-gradient-to-b from-transparent via-fresh-500/[0.02] to-transparent"></div>
+    <div class="max-w-7xl mx-auto px-6 relative z-10">
+        <div class="text-center mb-16 reveal">
+            <span class="text-xs font-semibold text-fresh-400 uppercase tracking-[0.25em] mb-4 block">Solution</span>
+            <h2 class="font-display text-4xl sm:text-5xl font-bold tracking-tight mb-4">Four Pillars of <span class="text-fresh-400">Fresh Track</span></h2>
+            <p class="text-neutral-400 text-lg font-light max-w-2xl mx-auto">Scan, calculate, notify, and share — all from your browser, no app install needed.</p>
+        </div>
+        <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="glass rounded-2xl p-7 reveal group" style="transition-delay:.1s">
+                <div class="w-12 h-12 rounded-xl bg-fresh-500/10 border border-fresh-500/20 flex items-center justify-center mb-5 group-hover:bg-fresh-500/20 transition">
+                    <iconify-icon icon="solar:camera-bold" class="text-fresh-400 text-xl"></iconify-icon>
+                </div>
+                <h3 class="font-display font-bold text-lg mb-2">OCR Smart Scan</h3>
+                <p class="text-neutral-400 text-sm leading-relaxed">Capture or upload a label; Tesseract.js reads the printed date automatically in your browser.</p>
+            </div>
+            <div class="glass rounded-2xl p-7 reveal group" style="transition-delay:.2s">
+                <div class="w-12 h-12 rounded-xl bg-fresh-500/10 border border-fresh-500/20 flex items-center justify-center mb-5 group-hover:bg-fresh-500/20 transition">
+                    <iconify-icon icon="solar:calculator-bold" class="text-fresh-400 text-xl"></iconify-icon>
+                </div>
+                <h3 class="font-display font-bold text-lg mb-2">Auto Expiry Calc</h3>
+                <p class="text-neutral-400 text-sm leading-relaxed">Manufacture date + shelf life instantly computes the exact expiry date for any product.</p>
+            </div>
+            <div class="glass rounded-2xl p-7 reveal group" style="transition-delay:.3s">
+                <div class="w-12 h-12 rounded-xl bg-warn-500/10 border border-warn-500/20 flex items-center justify-center mb-5 group-hover:bg-warn-500/20 transition">
+                    <iconify-icon icon="solar:bell-bing-bold" class="text-warn-400 text-xl"></iconify-icon>
+                </div>
+                <h3 class="font-display font-bold text-lg mb-2">Smart Notifications</h3>
+                <p class="text-neutral-400 text-sm leading-relaxed">Automatic alerts as items approach their expiry window — never caught off guard again.</p>
+            </div>
+            <div class="glass rounded-2xl p-7 reveal group" style="transition-delay:.4s">
+                <div class="w-12 h-12 rounded-xl bg-fresh-500/10 border border-fresh-500/20 flex items-center justify-center mb-5 group-hover:bg-fresh-500/20 transition">
+                    <iconify-icon icon="solar:hand-heart-bold" class="text-fresh-400 text-xl"></iconify-icon>
+                </div>
+                <h3 class="font-display font-bold text-lg mb-2">Donate Near-Expiry</h3>
+                <p class="text-neutral-400 text-sm leading-relaxed">List still-good items so nearby users can claim them before they go to waste.</p>
+            </div>
+        </div>
+        <!-- USP Banner -->
+        <div class="mt-12 glass rounded-2xl p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center gap-4 reveal" style="border-color:rgba(34,197,94,0.2);background:rgba(34,197,94,0.03)">
+            <iconify-icon icon="solar:star-bold" class="text-fresh-400 text-3xl flex-shrink-0"></iconify-icon>
+            <div>
+                <h4 class="font-display font-bold text-sm uppercase tracking-wider text-fresh-400 mb-1">Unique Selling Point</h4>
+                <p class="text-neutral-300 text-sm leading-relaxed">Combines in-browser OCR expiry tracking with a built-in donation marketplace and demand analytics — turning waste prevention into actual redistribution, not just reminders.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===== HOW IT WORKS ===== -->
+<section id="how" class="py-32 relative">
+    <div class="max-w-7xl mx-auto px-6">
+        <div class="text-center mb-16 reveal">
+            <span class="text-xs font-semibold text-fresh-400 uppercase tracking-[0.25em] mb-4 block">Workflow</span>
+            <h2 class="font-display text-4xl sm:text-5xl font-bold tracking-tight mb-4">How It <span class="text-fresh-400">Works</span></h2>
+        </div>
+        <div class="grid md:grid-cols-4 gap-8">
+            <div class="text-center reveal" style="transition-delay:.1s">
+                <div class="w-16 h-16 rounded-2xl bg-fresh-500/10 border border-fresh-500/20 flex items-center justify-center mx-auto mb-5 relative">
+                    <iconify-icon icon="solar:camera-add-bold" class="text-fresh-400 text-2xl"></iconify-icon>
+                    <span class="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-fresh-500 text-black text-[10px] font-bold flex items-center justify-center">1</span>
+                </div>
+                <h4 class="font-display font-bold mb-2">Scan Label</h4>
+                <p class="text-neutral-500 text-sm">Point your camera at the product label or upload a photo</p>
+            </div>
+            <div class="text-center reveal" style="transition-delay:.2s">
+                <div class="w-16 h-16 rounded-2xl bg-fresh-500/10 border border-fresh-500/20 flex items-center justify-center mx-auto mb-5 relative">
+                    <iconify-icon icon="solar:cpu-bolt-bold" class="text-fresh-400 text-2xl"></iconify-icon>
+                    <span class="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-fresh-500 text-black text-[10px] font-bold flex items-center justify-center">2</span>
+                </div>
+                <h4 class="font-display font-bold mb-2">AI Reads Date</h4>
+                <p class="text-neutral-500 text-sm">Tesseract.js OCR extracts the manufacture date from the label</p>
+            </div>
+            <div class="text-center reveal" style="transition-delay:.3s">
+                <div class="w-16 h-16 rounded-2xl bg-fresh-500/10 border border-fresh-500/20 flex items-center justify-center mx-auto mb-5 relative">
+                    <iconify-icon icon="solar:tag-check-bold" class="text-fresh-400 text-2xl"></iconify-icon>
+                    <span class="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-fresh-500 text-black text-[10px] font-bold flex items-center justify-center">3</span>
+                </div>
+                <h4 class="font-display font-bold mb-2">Auto Tag & Alert</h4>
+                <p class="text-neutral-500 text-sm">Product tagged Good / Warning / Expired with smart notifications</p>
+            </div>
+            <div class="text-center reveal" style="transition-delay:.4s">
+                <div class="w-16 h-16 rounded-2xl bg-fresh-500/10 border border-fresh-500/20 flex items-center justify-center mx-auto mb-5 relative">
+                    <iconify-icon icon="solar:share-circle-bold" class="text-fresh-400 text-2xl"></iconify-icon>
+                    <span class="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-fresh-500 text-black text-[10px] font-bold flex items-center justify-center">4</span>
+                </div>
+                <h4 class="font-display font-bold mb-2">Share or Donate</h4>
+                <p class="text-neutral-500 text-sm">List near-expiry items for nearby users to claim before waste</p>
+            </div>
+        </div>
+        <!-- Tech Stack -->
+        <div class="mt-20 glass rounded-2xl p-8 reveal">
+            <h4 class="font-display font-bold text-center mb-6 text-neutral-300">Tech Stack — Fully Client-Side, Zero Dependencies</h4>
+            <div class="flex flex-wrap justify-center gap-4">
+                <span class="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-sm text-neutral-300 flex items-center gap-2"><iconify-icon icon="logos:html-5" class="text-lg"></iconify-icon>HTML</span>
+                <span class="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-sm text-neutral-300 flex items-center gap-2"><iconify-icon icon="logos:css-3" class="text-lg"></iconify-icon>CSS</span>
+                <span class="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-sm text-neutral-300 flex items-center gap-2"><iconify-icon icon="logos:javascript" class="text-lg"></iconify-icon>JavaScript</span>
+                <span class="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-sm text-neutral-300 flex items-center gap-2"><iconify-icon icon="solar:database-bold" class="text-fresh-400 text-lg"></iconify-icon>LocalStorage</span>
+                <span class="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-sm text-neutral-300 flex items-center gap-2"><iconify-icon icon="solar:eye-scan-bold" class="text-fresh-400 text-lg"></iconify-icon>Tesseract.js OCR</span>
+                <span class="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-sm text-neutral-300 flex items-center gap-2"><iconify-icon icon="logos:chart-js" class="text-lg"></iconify-icon>Chart.js</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===== DASHBOARD (FUNCTIONAL) ===== -->
+<section id="dashboard" class="py-32 relative">
+    <div class="absolute inset-0 bg-gradient-to-b from-transparent via-fresh-500/[0.02] to-transparent"></div>
+    <div class="max-w-7xl mx-auto px-6 relative z-10">
+        <div class="text-center mb-12 reveal">
+            <span class="text-xs font-semibold text-fresh-400 uppercase tracking-[0.25em] mb-4 block">Live Demo</span>
+            <h2 class="font-display text-4xl sm:text-5xl font-bold tracking-tight mb-4">Try Fresh <span class="text-fresh-400">Track</span></h2>
+            <p class="text-neutral-400 text-lg font-light max-w-2xl mx-auto">A fully functional prototype. Add products, scan labels, track expiry, and donate — all in your browser.</p>
+        </div>
+
+        <!-- Dashboard Container -->
+        <div class="glass rounded-3xl overflow-hidden reveal" style="border-color:rgba(34,197,94,0.15)">
+            <!-- Dashboard Header / Tabs -->
+            <div class="border-b border-white/5 px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div class="flex items-center gap-1 overflow-x-auto">
+                    <button class="tab-btn active px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap" data-tab="overview">
+                        <iconify-icon icon="solar:chart-2-bold" class="mr-1 align-middle"></iconify-icon>Overview
+                    </button>
+                    <button class="tab-btn px-4 py-2 text-sm font-medium text-neutral-500 rounded-lg whitespace-nowrap" data-tab="products">
+                        <iconify-icon icon="solar:box-bold" class="mr-1 align-middle"></iconify-icon>My Products
+                    </button>
+                    <button class="tab-btn px-4 py-2 text-sm font-medium text-neutral-500 rounded-lg whitespace-nowrap" data-tab="scan">
+                        <iconify-icon icon="solar:camera-bold" class="mr-1 align-middle"></iconify-icon>Scan
+                    </button>
+                    <button class="tab-btn px-4 py-2 text-sm font-medium text-neutral-500 rounded-lg whitespace-nowrap" data-tab="donate">
+                        <iconify-icon icon="solar:hand-heart-bold" class="mr-1 align-middle"></iconify-icon>Donate
+                    </button>
+                </div>
+                <button id="addProductBtn" class="btn-glow bg-fresh-500 hover:bg-fresh-600 text-black font-semibold text-sm px-5 py-2.5 rounded-xl transition-colors flex items-center gap-2 whitespace-nowrap">
+                    <iconify-icon icon="solar:add-circle-bold" class="text-lg"></iconify-icon>Add Product
+                </button>
+            </div>
+
+            <!-- Tab: Overview -->
+            <div id="tab-overview" class="tab-content p-6">
+                <!-- Warning Banner -->
+                <div id="warningBanner" class="hidden mb-6 bg-warn-500/10 border border-warn-500/20 rounded-xl p-4 flex items-center gap-3">
+                    <iconify-icon icon="solar:danger-triangle-bold" class="text-warn-400 text-2xl flex-shrink-0"></iconify-icon>
+                    <p class="text-sm text-warn-400"><span id="warningCount" class="font-bold">0</span> product(s) expiring within 7 days. Check My Products or consider donating them.</p>
+                </div>
+                <!-- Stats -->
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                    <div class="bg-white/[0.03] border border-white/5 rounded-xl p-5">
+                        <p class="text-xs text-neutral-500 mb-1 uppercase tracking-wider">Total Products</p>
+                        <p id="statTotal" class="font-display text-3xl font-bold stat-num">0</p>
+                    </div>
+                    <div class="bg-fresh-500/[0.03] border border-fresh-500/10 rounded-xl p-5">
+                        <p class="text-xs text-neutral-500 mb-1 uppercase tracking-wider">Good</p>
+                        <p id="statGood" class="font-display text-3xl font-bold text-fresh-400">0</p>
+                    </div>
+                    <div class="bg-warn-500/[0.03] border border-warn-500/10 rounded-xl p-5">
+                        <p class="text-xs text-neutral-500 mb-1 uppercase tracking-wider">Warning</p>
+                        <p id="statWarn" class="font-display text-3xl font-bold text-warn-400">0</p>
+                    </div>
+                    <div class="bg-danger-500/[0.03] border border-danger-500/10 rounded-xl p-5">
+                        <p class="text-xs text-neutral-500 mb-1 uppercase tracking-wider">Expired</p>
+                        <p id="statExpired" class="font-display text-3xl font-bold text-danger-400">0</p>
+                    </div>
+                </div>
+                <!-- Charts -->
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="bg-white/[0.02] border border-white/5 rounded-xl p-6">
+                        <h4 class="font-display font-semibold text-sm mb-4 text-neutral-300">Status Distribution</h4>
+                        <div class="relative" style="max-height:280px;display:flex;justify-content:center">
+                            <canvas id="statusChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="bg-white/[0.02] border border-white/5 rounded-xl p-6">
+                        <h4 class="font-display font-semibold text-sm mb-4 text-neutral-300">Products by Category</h4>
+                        <div style="max-height:280px">
+                            <canvas id="categoryChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Products -->
+            <div id="tab-products" class="tab-content hidden p-6">
+                <!-- Filters -->
+                <div class="flex flex-wrap items-center gap-3 mb-6">
+                    <button class="filter-btn active text-xs font-medium px-4 py-2 rounded-lg bg-fresh-500/10 text-fresh-400 border border-fresh-500/20" data-filter="all">All</button>
+                    <button class="filter-btn text-xs font-medium px-4 py-2 rounded-lg bg-white/5 text-neutral-500 border border-white/5 hover:border-fresh-500/20 transition" data-filter="good">Good</button>
+                    <button class="filter-btn text-xs font-medium px-4 py-2 rounded-lg bg-white/5 text-neutral-500 border border-white/5 hover:border-warn-500/20 transition" data-filter="warning">Warning</button>
+                    <button class="filter-btn text-xs font-medium px-4 py-2 rounded-lg bg-white/5 text-neutral-500 border border-white/5 hover:border-danger-500/20 transition" data-filter="expired">Expired</button>
+                </div>
+                <!-- Product List -->
+                <div id="productList" class="space-y-2"></div>
+                <div id="emptyState" class="hidden text-center py-16">
+                    <iconify-icon icon="solar:box-minimalistic-broken" class="text-5xl text-neutral-700 mb-4"></iconify-icon>
+                    <p class="text-neutral-500">No products yet. Click "Add Product" to get started.</p>
+                </div>
+            </div>
+
+            <!-- Tab: Scan -->
+            <div id="tab-scan" class="tab-content hidden p-6">
+                <div class="max-w-2xl mx-auto">
+                    <div class="text-center mb-8">
+                        <div class="w-20 h-20 rounded-2xl bg-fresh-500/10 border border-fresh-500/20 flex items-center justify-center mx-auto mb-4">
+                            <iconify-icon icon="solar:camera-bold" class="text-fresh-400 text-3xl"></iconify-icon>
+                        </div>
+                        <h3 class="font-display font-bold text-xl mb-2">Scan a Product Label</h3>
+                        <p class="text-neutral-500 text-sm">Use your camera or upload an image of the product label. OCR will extract the date automatically.</p>
+                    </div>
+                    <div class="grid sm:grid-cols-2 gap-4 mb-8">
+                        <button id="openCameraBtn" class="glass rounded-2xl p-8 text-center hover:border-fresh-500/30 transition group cursor-pointer">
+                            <iconify-icon icon="solar:camera-rotate-bold" class="text-4xl text-neutral-500 group-hover:text-fresh-400 transition mb-3 block mx-auto"></iconify-icon>
+                            <p class="font-semibold text-sm">Open Camera</p>
+                            <p class="text-neutral-600 text-xs mt-1">Live capture from device</p>
+                        </button>
+                        <label class="glass rounded-2xl p-8 text-center hover:border-fresh-500/30 transition group cursor-pointer block">
+                            <iconify-icon icon="solar:upload-minimalistic-bold" class="text-4xl text-neutral-500 group-hover:text-fresh-400 transition mb-3 block mx-auto"></iconify-icon>
+                            <p class="font-semibold text-sm">Upload Image</p>
+                            <p class="text-neutral-600 text-xs mt-1">JPG, PNG from gallery</p>
+                            <input type="file" id="uploadInput" accept="image/*" class="hidden">
+                        </label>
+                    </div>
+                    <!-- Scanning Preview Area -->
+                    <div id="scanPreview" class="hidden bg-black/50 rounded-2xl overflow-hidden border border-white/5 mb-6">
+                        <div class="relative">
+                            <video id="cameraFeed" autoplay playsinline class="w-full rounded-t-2xl" style="max-height:300px;object-fit:cover"></video>
+                            <img id="uploadedImage" class="w-full rounded-t-2xl hidden" style="max-height:300px;object-fit:contain">
+                            <div id="scanOverlay" class="absolute inset-0 flex items-center justify-center">
+                                <div class="scan-line"></div>
+                                <div class="absolute inset-4 border-2 border-fresh-500/30 rounded-xl"></div>
+                            </div>
+                        </div>
+                        <div class="p-4 flex items-center justify-between">
+                            <p id="scanStatus" class="text-sm text-fresh-400 flex items-center gap-2">
+                                <iconify-icon icon="solar:loading-bold" class="animate-spin"></iconify-icon> Scanning label...
+                            </p>
+                            <div class="flex gap-2">
+                                <button id="captureBtn" class="bg-fresh-500 text-black font-semibold text-sm px-5 py-2 rounded-lg hover:bg-fresh-600 transition">
+                                    <iconify-icon icon="solar:camera-bold" class="mr-1"></iconify-icon>Capture
+                                </button>
+                                <button id="closeScanBtn" class="bg-white/10 text-white text-sm px-4 py-2 rounded-lg hover:bg-white/15 transition">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- OCR Result Form -->
+                    <div id="ocrResult" class="hidden glass rounded-2xl p-6" style="border-color:rgba(34,197,94,0.2)">
+                        <div class="flex items-center gap-2 mb-4">
+                            <iconify-icon icon="solar:check-circle-bold" class="text-fresh-400 text-xl"></iconify-icon>
+                            <h4 class="font-display font-bold">Date Detected — Confirm Details</h4>
+                        </div>
+                        <div class="grid sm:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label class="text-xs text-neutral-500 mb-1 block">Product Name</label>
+                                <input id="ocrName" type="text" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-fresh-500/50 transition" placeholder="e.g. Amul Butter">
+                            </div>
+                            <div>
+                                <label class="text-xs text-neutral-500 mb-1 block">Category</label>
+                                <select id="ocrCategory" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-fresh-500/50 transition appearance-none">
+                                    <option value="Dairy" class="bg-neutral-900">Dairy</option>
+                                    <option value="Snacks" class="bg-neutral-900">Snacks</option>
+                                    <option value="Grains" class="bg-neutral-900">Grains</option>
+                                    <option value="Beverages" class="bg-neutral-900">Beverages</option>
+                                    <option value="Meals" class="bg-neutral-900">Meals</option>
+                                    <option value="Bakery" class="bg-neutral-900">Bakery</option>
+                                    <option value="Cooking" class="bg-neutral-900">Cooking</option>
+                                    <option value="Fruits" class="bg-neutral-900">Fruits & Vegetables</option>
+                                    <option value="Condiments" class="bg-neutral-900">Condiments</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-xs text-neutral-500 mb-1 block">Manufacture Date</label>
+                                <input id="ocrMfgDate" type="date" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-fresh-500/50 transition">
+                            </div>
+                            <div>
+                                <label class="text-xs text-neutral-500 mb-1 block">Shelf Life (days)</label>
+                                <input id="ocrShelfLife" type="number" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-fresh-500/50 transition" placeholder="e.g. 180" value="180">
+                            </div>
+                        </div>
+                        <button id="saveOcrResult" class="btn-glow w-full bg-fresh-500 hover:bg-fresh-600 text-black font-semibold py-3 rounded-xl transition-colors">
+                            Save Product
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Donate -->
+            <div id="tab-donate" class="tab-content hidden p-6">
+                <div class="max-w-3xl mx-auto">
+                    <div class="text-center mb-8">
+                        <iconify-icon icon="solar:hand-heart-bold" class="text-fresh-400 text-4xl mb-3 block"></iconify-icon>
+                        <h3 class="font-display font-bold text-xl mb-2">Donation Marketplace</h3>
+                        <p class="text-neutral-500 text-sm">Products in "Warning" status can be listed here for nearby users to claim before they expire.</p>
+                    </div>
+                    <div id="donationList" class="space-y-3"></div>
+                    <div id="donationEmpty" class="hidden text-center py-12">
+                        <iconify-icon icon="solar:gift-broken" class="text-4xl text-neutral-700 mb-3 block"></iconify-icon>
+                        <p class="text-neutral-500 text-sm">No donations available. List your near-expiry products from the "My Products" tab.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===== IMPACT ===== -->
+<section id="impact" class="py-32 relative">
+    <div class="max-w-7xl mx-auto px-6">
+        <div class="text-center mb-16 reveal">
+            <span class="text-xs font-semibold text-fresh-400 uppercase tracking-[0.25em] mb-4 block">Impact & Model</span>
+            <h2 class="font-display text-4xl sm:text-5xl font-bold tracking-tight mb-4">Why Fresh Track <span class="text-fresh-400">Wins</span></h2>
+        </div>
+        <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+            <div class="glass rounded-2xl p-8 text-center reveal" style="transition-delay:.1s">
+                <p class="font-display text-4xl font-bold stat-num mb-2">1.3B</p>
+                <p class="text-xs text-neutral-500 uppercase tracking-wider">Tonnes Wasted / Year</p>
+            </div>
+            <div class="glass rounded-2xl p-8 text-center reveal" style="transition-delay:.2s">
+                <p class="font-display text-4xl font-bold stat-num mb-2">₹92K<span class="text-xl">cr</span></p>
+                <p class="text-xs text-neutral-500 uppercase tracking-wider">Worth Lost in India</p>
+            </div>
+            <div class="glass rounded-2xl p-8 text-center reveal" style="transition-delay:.3s">
+                <p class="font-display text-4xl font-bold stat-num mb-2">7-Day</p>
+                <p class="text-xs text-neutral-500 uppercase tracking-wider">Early Alert Window</p>
+            </div>
+            <div class="glass rounded-2xl p-8 text-center reveal" style="transition-delay:.4s">
+                <p class="font-display text-4xl font-bold stat-num mb-2">∞</p>
+                <p class="text-xs text-neutral-500 uppercase tracking-wider">Households Served</p>
+            </div>
+        </div>
+        <!-- Business Model -->
+        <div class="grid md:grid-cols-2 gap-8">
+            <div class="glass rounded-2xl p-8 reveal">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="w-10 h-10 rounded-xl bg-fresh-500/10 border border-fresh-500/20 flex items-center justify-center">
+                        <iconify-icon icon="solar:home-bold" class="text-fresh-400"></iconify-icon>
+                    </div>
+                    <h4 class="font-display font-bold text-lg">B2C — Freemium</h4>
+                </div>
+                <p class="text-neutral-400 text-sm leading-relaxed mb-4">Free for individual households to scan, track, and get expiry alerts. Premium tier unlocks unlimited products, advanced analytics, and family sharing.</p>
+                <div class="flex flex-wrap gap-2">
+                    <span class="text-[10px] font-medium px-3 py-1 rounded-full bg-fresh-500/10 text-fresh-400 border border-fresh-500/20">Free forever</span>
+                    <span class="text-[10px] font-medium px-3 py-1 rounded-full bg-white/5 text-neutral-400 border border-white/10">Premium tier</span>
+                </div>
+            </div>
+            <div class="glass rounded-2xl p-8 reveal" style="transition-delay:.1s">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="w-10 h-10 rounded-xl bg-fresh-500/10 border border-fresh-500/20 flex items-center justify-center">
+                        <iconify-icon icon="solar:shop-bold" class="text-fresh-400"></iconify-icon>
+                    </div>
+                    <h4 class="font-display font-bold text-lg">B2B — Licensing</h4>
+                </div>
+                <p class="text-neutral-400 text-sm leading-relaxed mb-4">License the OCR expiry-tracking and demand analytics engine to grocery retailers and supermarkets who want to cut shelf-level waste.</p>
+                <div class="flex flex-wrap gap-2">
+                    <span class="text-[10px] font-medium px-3 py-1 rounded-full bg-fresh-500/10 text-fresh-400 border border-fresh-500/20">OCR engine</span>
+                    <span class="text-[10px] font-medium px-3 py-1 rounded-full bg-white/5 text-neutral-400 border border-white/10">Analytics API</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer class="border-t border-white/5 py-16">
+    <div class="max-w-7xl mx-auto px-6">
+        <div class="grid md:grid-cols-3 gap-12 mb-12">
+            <div>
+                <div class="flex items-center gap-2 mb-4">
+                    <div class="w-9 h-9 rounded-xl bg-fresh-500/20 border border-fresh-500/30 flex items-center justify-center">
+                        <iconify-icon icon="solar:leaf-bold" class="text-fresh-400 text-lg"></iconify-icon>
+                    </div>
+                    <span class="font-display font-bold text-lg">Fresh<span class="text-fresh-400">Track</span></span>
+                </div>
+                <p class="text-neutral-500 text-sm leading-relaxed">Scan, track, and share — stop food waste at the source. A CodeCure project for MIRAETHON 2K26.</p>
+            </div>
+            <div>
+                <h5 class="font-display font-semibold text-sm mb-4">Quick Links</h5>
+                <div class="flex flex-col gap-2">
+                    <a href="#problem" class="text-sm text-neutral-500 hover:text-white transition">The Problem</a>
+                    <a href="#features" class="text-sm text-neutral-500 hover:text-white transition">Features</a>
+                    <a href="#dashboard" class="text-sm text-neutral-500 hover:text-white transition">Live Dashboard</a>
+                    <a href="#impact" class="text-sm text-neutral-500 hover:text-white transition">Impact</a>
+                </div>
+            </div>
+            <div>
+                <h5 class="font-display font-semibold text-sm mb-4">About</h5>
+                <p class="text-neutral-500 text-sm leading-relaxed mb-3">Srinivas Institute of Technology, Valachil, Mangalore. Department of AI & Data Science.</p>
+                <p class="text-neutral-600 text-xs">Team CodeCure • MIRAETHON 2K26 • Track: Health & Wellness</p>
+            </div>
+        </div>
+        <div class="border-t border-white/5 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p class="text-neutral-600 text-xs">© 2025 Fresh Track by CodeCure. Built for MIRAETHON 2K26.</p>
+            <p class="text-neutral-700 text-xs">Less Waste. More Shared Food.</p>
+        </div>
+    </div>
+</footer>
+
+<!-- ===== ADD PRODUCT MODAL ===== -->
+<div id="addModal" class="modal-overlay fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+    <div class="modal-content glass rounded-3xl p-8 w-full max-w-lg" style="border-color:rgba(34,197,94,0.15)">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="font-display font-bold text-xl">Add New Product</h3>
+            <button id="closeModal" class="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center transition">
+                <iconify-icon icon="solar:close-circle-linear" class="text-xl text-neutral-400"></iconify-icon>
+            </button>
+        </div>
+        <form id="addForm" class="space-y-4">
+            <div>
+                <label class="text-xs text-neutral-500 mb-1 block">Product Name *</label>
+                <input id="formName" type="text" required class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-fresh-500/50 transition" placeholder="e.g. Amul Butter 500g">
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="text-xs text-neutral-500 mb-1 block">Category *</label>
+                    <select id="formCategory" required class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-fresh-500/50 transition appearance-none">
+                        <option value="" class="bg-neutral-900">Select...</option>
+                        <option value="Dairy" class="bg-neutral-900">Dairy</option>
+                        <option value="Snacks" class="bg-neutral-900">Snacks</option>
+                        <option value="Grains" class="bg-neutral-900">Grains</option>
+                        <option value="Beverages" class="bg-neutral-900">Beverages</option>
+                        <option value="Meals" class="bg-neutral-900">Meals</option>
+                        <option value="Bakery" class="bg-neutral-900">Bakery</option>
+                        <option value="Cooking" class="bg-neutral-900">Cooking</option>
+                        <option value="Fruits" class="bg-neutral-900">Fruits & Vegetables</option>
+                        <option value="Condiments" class="bg-neutral-900">Condiments</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-xs text-neutral-500 mb-1 block">Shelf Life (days) *</label>
+                    <input id="formShelfLife" type="number" required min="1" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-fresh-500/50 transition" placeholder="e.g. 180">
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="text-xs text-neutral-500 mb-1 block">Purchase Date *</label>
+                    <input id="formPurchaseDate" type="date" required class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-fresh-500/50 transition">
+                </div>
+                <div>
+                    <label class="text-xs text-neutral-500 mb-1 block">Mfg Date (optional)</label>
+                    <input id="formMfgDate" type="date" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-fresh-500/50 transition">
+                </div>
+            </div>
+            <div>
+                <label class="text-xs text-neutral-500 mb-1 block">Emoji Icon</label>
+                <div class="flex flex-wrap gap-2" id="emojiPicker">
+                    <button type="button" class="emoji-opt w-10 h-10 rounded-lg bg-white/5 border border-white/10 hover:border-fresh-500/30 text-lg flex items-center justify-center transition" data-emoji="🧈">🧈</button>
+                    <button type="button" class="emoji-opt w-10 h-10 rounded-lg bg-white/5 border border-white/10 hover:border-fresh-500/30 text-lg flex items-center justify-center transition" data-emoji="🍜">🍜</button>
+                    <button type="button" class="emoji-opt w-10 h-10 rounded-lg bg-white/5 border border-white/10 hover:border-fresh-500/30 text-lg flex items-center justify-center transition" data-emoji="🌾">🌾</button>
+                    <button type="button" class="emoji-opt w-10 h-10 rounded-lg bg-white/5 border border-white/10 hover:border-fresh-500/30 text-lg flex items-center justify-center transition" data-emoji="🍵">🍵</button>
+                    <button type="button" class="emoji-opt w-10 h-10 rounded-lg bg-white/5 border border-white/10 hover:border-fresh-500/30 text-lg flex items-center justify-center transition" data-emoji="🍛">🍛</button>
+                    <button type="button" class="emoji-opt w-10 h-10 rounded-lg bg-white/5 border border-white/10 hover:border-fresh-500/30 text-lg flex items-center justify-center transition" data-emoji="🥛">🥛</button>
+                    <button type="button" class="emoji-opt w-10 h-10 rounded-lg bg-white/5 border border-white/10 hover:border-fresh-500/30 text-lg flex items-center justify-center transition" data-emoji="🍞">🍞</button>
+                    <button type="button" class="emoji-opt w-10 h-10 rounded-lg bg-white/5 border border-white/10 hover:border-fresh-500/30 text-lg flex items-center justify-center transition" data-emoji="🥤">🥤</button>
+                    <button type="button" class="emoji-opt w-10 h-10 rounded-lg bg-white/5 border border-white/10 hover:border-fresh-500/30 text-lg flex items-center justify-center transition" data-emoji="🫒">🫒</button>
+                    <button type="button" class="emoji-opt w-10 h-10 rounded-lg bg-white/5 border border-white/10 hover:border-fresh-500/30 text-lg flex items-center justify-center transition" data-emoji="🍎">🍎</button>
+                    <button type="button" class="emoji-opt w-10 h-10 rounded-lg bg-white/5 border border-white/10 hover:border-fresh-500/30 text-lg flex items-center justify-center transition" data-emoji="🧂">🧂</button>
+                    <button type="button" class="emoji-opt w-10 h-10 rounded-lg bg-white/5 border border-white/10 hover:border-fresh-500/30 text-lg flex items-center justify-center transition" data-emoji="罐">🥫</button>
+                </div>
+            </div>
+            <button type="submit" class="btn-glow w-full bg-fresh-500 hover:bg-fresh-600 text-black font-semibold py-3.5 rounded-xl transition-colors mt-2">
+                Add to My Kitchen
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- ===== JAVASCRIPT ===== -->
+<script>
+// ==========================================
+// APP STATE & DATA
+// ==========================================
+const CATEGORY_EMOJIS = {
+    Dairy:'🧈', Snacks:'🍜', Grains:'🌾', Beverages:'🍵',
+    Meals:'🍛', Bakery:'🍞', Cooking:'🫒', Fruits:'🍎', Condiments:'🧂'
+};
+
+const SAMPLE_PRODUCTS = [
+    { id:1, name:'Amul Butter 500g', category:'Dairy', emoji:'🧈', purchaseDate:'2025-01-15', mfgDate:'2025-01-10', shelfLife:180 },
+    { id:2, name:'Maggi Noodles Pack', category:'Snacks', emoji:'🍜', purchaseDate:'2025-05-20', mfgDate:'2025-04-15', shelfLife:270 },
+    { id:3, name:'Aashirvaad Atta 5kg', category:'Grains', emoji:'🌾', purchaseDate:'2025-06-01', mfgDate:'2025-05-20', shelfLife:180 },
+    { id:4, name:'Tetley Green Tea 25pk', category:'Beverages', emoji:'🍵', purchaseDate:'2025-01-10', mfgDate:'2024-12-20', shelfLife:180 },
+    { id:5, name:'MTR Ready Mix Rice', category:'Meals', emoji:'🍛', purchaseDate:'2025-05-25', mfgDate:'2025-04-10', shelfLife:270 },
+    { id:6, name:'Tropicana Juice 1L', category:'Beverages', emoji:'🥤', purchaseDate:'2025-06-10', mfgDate:'2025-06-05', shelfLife:60 },
+    { id:7, name:'Britannia Bread', category:'Bakery', emoji:'🍞', purchaseDate:'2025-06-18', mfgDate:'2025-06-17', shelfLife:7 },
+    { id:8, name:'Fortune Sunflower Oil', category:'Cooking', emoji:'🫒', purchaseDate:'2025-05-01', mfgDate:'2025-04-20', shelfLife:365 },
+];
+
+let products = [];
+let donations = [];
+let selectedEmoji = '📦';
+let currentFilter = 'all';
+let statusChart = null;
+let categoryChart = null;
+let cameraStream = null;
+
+// ==========================================
+// UTILITY FUNCTIONS
+// ==========================================
+function generateId() { return Date.now() + Math.random().toString(36).substr(2, 5); }
+
+function getExpiryDate(product) {
+    const base = product.mfgDate || product.purchaseDate;
+    const d = new Date(base);
+    d.setDate(d.getDate() + product.shelfLife);
+    return d;
+}
+
+function getDaysUntilExpiry(product) {
+    const expiry = getExpiryDate(product);
+    const now = new Date();
+    now.setHours(0,0,0,0);
+    expiry.setHours(0,0,0,0);
+    return Math.ceil((expiry - now) / (1000 * 60 * 60 * 24));
+}
+
+function getStatus(product) {
+    const days = getDaysUntilExpiry(product);
+    if (days <= 0) return 'expired';
+    if (days <= 7) return 'warning';
+    return 'good';
+}
+
+function formatDate(dateStr) {
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' });
+}
+
+function saveToStorage() {
+    localStorage.setItem('freshtrack_products', JSON.stringify(products));
+    localStorage.setItem('freshtrack_donations', JSON.stringify(donations));
+}
+
+function loadFromStorage() {
+    const stored = localStorage.getItem('freshtrack_products');
+    if (stored) {
+        products = JSON.parse(stored);
+    } else {
+        products = JSON.parse(JSON.stringify(SAMPLE_PRODUCTS));
+        saveToStorage();
+    }
+    const storedDon = localStorage.getItem('freshtrack_donations');
+    donations = storedDon ? JSON.parse(storedDon) : [];
+}
+
+// ==========================================
+// TOAST NOTIFICATIONS
+// ==========================================
+function showToast(message, type = 'success') {
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    const colors = {
+        success: 'border-fresh-500/30 bg-fresh-500/10',
+        warning: 'border-warn-500/30 bg-warn-500/10',
+        error: 'border-danger-500/30 bg-danger-500/10',
+        info: 'border-blue-500/30 bg-blue-500/10'
+    };
+    const icons = {
+        success: '<iconify-icon icon="solar:check-circle-bold" class="text-fresh-400 text-lg"></iconify-icon>',
+        warning: '<iconify-icon icon="solar:danger-triangle-bold" class="text-warn-400 text-lg"></iconify-icon>',
+        error: '<iconify-icon icon="solar:close-circle-bold" class="text-danger-400 text-lg"></iconify-icon>',
+        info: '<iconify-icon icon="solar:info-circle-bold" class="text-blue-400 text-lg"></iconify-icon>'
+    };
+    const textColors = { success:'text-fresh-300', warning:'text-warn-300', error:'text-danger-300', info:'text-blue-300' };
+    toast.className = `toast flex items-center gap-3 px-5 py-3.5 rounded-xl border backdrop-blur-xl ${colors[type]} min-w-[280px]`;
+    toast.innerHTML = `${icons[type]}<span class="text-sm font-medium ${textColors[type]}">${message}</span>`;
+    container.appendChild(toast);
+    requestAnimationFrame(() => toast.classList.add('show'));
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 400);
+    }, 3500);
+}
+
+// ==========================================
+// RENDER FUNCTIONS
+// ==========================================
+function renderStats() {
+    const total = products.length;
+    const good = products.filter(p => getStatus(p) === 'good').length;
+    const warn = products.filter(p => getStatus(p) === 'warning').length;
+    const expired = products.filter(p => getStatus(p) === 'expired').length;
+    document.getElementById('statTotal').textContent = total;
+    document.getElementById('statGood').textContent = good;
+    document.getElementById('statWarn').textContent = warn;
+    document.getElementById('statExpired').textContent = expired;
+    // Warning banner
+    const banner = document.getElementById('warningBanner');
+    if (warn > 0) {
+        banner.classList.remove('hidden');
+        document.getElementById('warningCount').textContent = warn;
+    } else {
+        banner.classList.add('hidden');
+    }
+}
+
+function renderCharts() {
+    const good = products.filter(p => getStatus(p) === 'good').length;
+    const warn = products.filter(p => getStatus(p) === 'warning').length;
+    const expired = products.filter(p => getStatus(p) === 'expired').length;
+
+    // Status Doughnut
+    const ctx1 = document.getElementById('statusChart').getContext('2d');
+    if (statusChart) statusChart.destroy();
+    statusChart = new Chart(ctx1, {
+        type: 'doughnut',
+        data: {
+            labels: ['Good', 'Warning', 'Expired'],
+            datasets: [{
+                data: [good, warn, expired],
+                backgroundColor: ['rgba(34,197,94,0.7)', 'rgba(245,158,11,0.7)', 'rgba(239,68,68,0.7)'],
+                borderColor: ['#22c55e', '#f59e0b', '#ef4444'],
+                borderWidth: 2,
+                hoverOffset: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            cutout: '65%',
+            plugins: {
+                legend: { position:'bottom', labels: { color:'#a3a3a3', padding:16, usePointStyle:true, pointStyleWidth:8, font:{size:11} } }
+            }
+        }
+    });
+
+    // Category Bar
+    const catCounts = {};
+    products.forEach(p => { catCounts[p.category] = (catCounts[p.category] || 0) + 1; });
+    const catLabels = Object.keys(catCounts);
+    const catData = Object.values(catCounts);
+    const ctx2 = document.getElementById('categoryChart').getContext('2d');
+    if (categoryChart) categoryChart.destroy();
+    categoryChart = new Chart(ctx2, {
+        type: 'bar',
+        data: {
+            labels: catLabels,
+            datasets: [{
+                label: 'Products',
+                data: catData,
+                backgroundColor: 'rgba(34,197,94,0.4)',
+                borderColor: '#22c55e',
+                borderWidth: 1,
+                borderRadius: 6,
+                maxBarThickness: 40
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            scales: {
+                y: { beginAtZero:true, ticks:{ color:'#525252', stepSize:1, font:{size:10} }, grid:{ color:'rgba(255,255,255,0.03)' }, border:{display:false} },
+                x: { ticks:{ color:'#525252', font:{size:10} }, grid:{ display:false }, border:{display:false} }
+            },
+            plugins: { legend:{ display:false } }
+        }
+    });
+}
+
+function renderProducts() {
+    const list = document.getElementById('productList');
+    const empty = document.getElementById('emptyState');
+    let filtered = products;
+    if (currentFilter !== 'all') {
+        filtered = products.filter(p => getStatus(p) === currentFilter);
+    }
+    if (filtered.length === 0) {
+        list.innerHTML = '';
+        empty.classList.remove('hidden');
+        return;
+    }
+    empty.classList.add('hidden');
+    // Sort: expired first, then warning, then good
+    const statusOrder = { expired:0, warning:1, good:2 };
+    filtered.sort((a,b) => statusOrder[getStatus(a)] - statusOrder[getStatus(b)]);
+
+    list.innerHTML = filtered.map(p => {
+        const status = getStatus(p);
+        const days = getDaysUntilExpiry(p);
+        const expiry = getExpiryDate(p);
+        const badgeClass = status === 'good' ? 'badge-good' : status === 'warning' ? 'badge-warn pulse-warn' : 'badge-expired';
+        const statusLabel = status.toUpperCase();
+        const daysText = days <= 0 ? 'Expired!' : days === 1 ? '1 day left' : `${days} days left`;
+        const isDonated = donations.some(d => d.productId === p.id);
+        return `
+        <div class="product-row flex items-center gap-4 p-4 rounded-xl border border-white/5 ${status === 'expired' ? 'opacity-60' : ''}">
+            <div class="w-11 h-11 rounded-xl bg-white/5 flex items-center justify-center text-xl flex-shrink-0">${p.emoji || CATEGORY_EMOJIS[p.category] || '📦'}</div>
+            <div class="flex-1 min-w-0">
+                <p class="font-semibold text-sm truncate">${p.name}</p>
+                <p class="text-xs text-neutral-500">${p.category} • Exp: ${formatDate(expiry.toISOString())} • ${daysText}</p>
+            </div>
+            <span class="text-[10px] font-bold px-3 py-1 rounded-full ${badgeClass} flex-shrink-0">${statusLabel}</span>
+            ${status === 'warning' && !isDonated ? `<button onclick="App.donateProduct('${p.id}')" class="text-xs font-medium px-3 py-1.5 rounded-lg bg-fresh-500/10 text-fresh-400 border border-fresh-500/20 hover:bg-fresh-500/20 transition flex-shrink-0" title="List for donation">
+                <iconify-icon icon="solar:hand-heart-bold" class="align-middle mr-1"></iconify-icon>Donate
+            </button>` : ''}
+            <button onclick="App.deleteProduct('${p.id}')" class="w-8 h-8 rounded-lg bg-white/5 hover:bg-danger-500/20 flex items-center justify-center transition flex-shrink-0" title="Delete">
+                <iconify-icon icon="solar:trash-bin-minimalistic-linear" class="text-neutral-600 hover:text-danger-400 text-sm"></iconify-icon>
+            </button>
+        </div>`;
+    }).join('');
+}
+
+function renderDonations() {
+    const list = document.getElementById('donationList');
+    const empty = document.getElementById('donationEmpty');
+    if (donations.length === 0) {
+        list.innerHTML = '';
+        empty.classList.remove('hidden');
+        return;
+    }
+    empty.classList.add('hidden');
+    list.innerHTML = donations.map(d => {
+        const p = products.find(pr => pr.id === d.id);
+        if (!p) return '';
+        const days = getDaysUntilExpiry(p);
+        return `
+        <div class="glass rounded-xl p-5 flex items-center gap-4" style="border-color:rgba(34,197,94,0.15)">
+            <div class="w-12 h-12 rounded-xl bg-fresh-500/10 border border-fresh-500/20 flex items-center justify-center text-xl">${p.emoji || '📦'}</div>
+            <div class="flex-1 min-w-0">
+                <p class="font-semibold text-sm">${p.name}</p>
+                <p class="text-xs text-neutral-500">${days} day(s) remaining • Listed ${formatDate(d.listedAt)}</p>
+            </div>
+            <span class="badge-warn text-[10px] font-bold px-3 py-1 rounded-full flex-shrink-0">NEAR EXPIRY</span>
+            <button onclick="App.claimDonation('${d.id}')" class="btn-glow bg-fresh-500 hover:bg-fresh-600 text-black font-semibold text-xs px-4 py-2 rounded-lg transition flex-shrink-0">
+                Claim
+            </button>
+        </div>`;
+    }).join('');
+}
+
+function renderAll() {
+    renderStats();
+    renderCharts();
+    renderProducts();
+    renderDonations();
+}
+
+// ==========================================
+// APP ACTIONS
+// ==========================================
+const App = {
+    init() {
+        loadFromStorage();
+        renderAll();
+        this.bindEvents();
+        // Check for expiry notifications on load
+        setTimeout(() => {
+            const expired = products.filter(p => getStatus(p) === 'expired');
+            const warning = products.filter(p => getStatus(p) === 'warning');
+            if (expired.length > 0) showToast(`${expired.length} product(s) have expired!`, 'error');
+            if (warning.length > 0) setTimeout(() => showToast(`${warning.length} product(s) expiring soon`, 'warning'), 800);
+        }, 1500);
+    },
+
+    addProduct(data) {
+        const product = {
+            id: generateId(),
+            name: data.name,
+            category: data.category,
+            emoji: data.emoji || CATEGORY_EMOJIS[data.category] || '📦',
+            purchaseDate: data.purchaseDate,
+            mfgDate: data.mfgDate || data.purchaseDate,
+            shelfLife: parseInt(data.shelfLife)
+        };
+        products.push(product);
+        saveToStorage();
+        renderAll();
+        showToast(`"${product.name}" added to your kitchen!`, 'success');
+    },
+
+    deleteProduct(id) {
+        const p = products.find(pr => pr.id === id);
+        products = products.filter(pr => pr.id !== id);
+        donations = donations.filter(d => d.id !== id);
+        saveToStorage();
+        renderAll();
+        if (p) showToast(`"${p.name}" removed.`, 'info');
+    },
+
+    donateProduct(id) {
+        const exists = donations.some(d => d.id === id);
+        if (exists) { showToast('Already listed for donation.', 'info'); return; }
+        donations.push({ id, productId: id, listedAt: new Date().toISOString() });
+        saveToStorage();
+        renderAll();
+        const p = products.find(pr => pr.id === id);
+        showToast(`"${p?.name}" listed for donation!`, 'success');
+    },
+
+    claimDonation(id) {
+        donations = donations.filter(d => d.id !== id);
+        saveToStorage();
+        renderAll();
+        showToast('Donation claimed successfully! 🎉', 'success');
+    },
+
+    bindEvents() {
+        // Tab switching
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn').forEach(b => { b.classList.remove('active'); b.classList.add('text-neutral-500'); });
+                btn.classList.add('active'); btn.classList.remove('text-neutral-500');
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+                document.getElementById('tab-' + btn.dataset.tab).classList.remove('hidden');
+                // Re-render charts when switching to overview
+                if (btn.dataset.tab === 'overview') renderCharts();
+            });
+        });
+
+        // Filter buttons
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.filter-btn').forEach(b => {
+                    b.classList.remove('active','bg-fresh-500/10','text-fresh-400','border-fresh-500/20');
+                    b.classList.add('bg-white/5','text-neutral-500','border-white/5');
+                });
+                btn.classList.add('active','bg-fresh-500/10','text-fresh-400','border-fresh-500/20');
+                btn.classList.remove('bg-white/5','text-neutral-500','border-white/5');
+                currentFilter = btn.dataset.filter;
+                renderProducts();
+            });
+        });
+
+        // Add Product Modal
+        const modal = document.getElementById('addModal');
+        document.getElementById('addProductBtn').addEventListener('click', () => {
+            modal.classList.add('open');
+            document.getElementById('formPurchaseDate').value = new Date().toISOString().split('T')[0];
+        });
+        document.getElementById('closeModal').addEventListener('click', () => modal.classList.remove('open'));
+        modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('open'); });
+
+        // Emoji picker
+        document.querySelectorAll('.emoji-opt').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.emoji-opt').forEach(b => b.classList.remove('border-fresh-500/50','bg-fresh-500/10'));
+                btn.classList.add('border-fresh-500/50','bg-fresh-500/10');
+                selectedEmoji = btn.dataset.emoji;
+            });
+        });
+
+        // Add form submit
+        document.getElementById('addForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const name = document.getElementById('formName').value.trim();
+            const category = document.getElementById('formCategory').value;
+            const shelfLife = document.getElementById('formShelfLife').value;
+            const purchaseDate = document.getElementById('formPurchaseDate').value;
+            const mfgDate = document.getElementById('formMfgDate').value;
+            if (!name || !category || !shelfLife || !purchaseDate) return;
+            App.addProduct({ name, category, shelfLife, purchaseDate, mfgDate, emoji: selectedEmoji });
+            modal.classList.remove('open');
+            e.target.reset();
+            document.querySelectorAll('.emoji-opt').forEach(b => b.classList.remove('border-fresh-500/50','bg-fresh-500/10'));
+            selectedEmoji = '📦';
+        });
+
+        // Camera
+        document.getElementById('openCameraBtn').addEventListener('click', () => this.openCamera());
+        document.getElementById('captureBtn').addEventListener('click', () => this.captureImage());
+        document.getElementById('closeScanBtn').addEventListener('click', () => this.closeScan());
+
+        // Upload
+        document.getElementById('uploadInput').addEventListener('change', (e) => this.handleUpload(e));
+
+        // Save OCR result
+        document.getElementById('saveOcrResult').addEventListener('click', () => {
+            const name = document.getElementById('ocrName').value.trim();
+            const category = document.getElementById('ocrCategory').value;
+            const mfgDate = document.getElementById('ocrMfgDate').value;
+            const shelfLife = document.getElementById('ocrShelfLife').value;
+            if (!name || !mfgDate || !shelfLife) {
+                showToast('Please fill in all fields.', 'error');
+                return;
+            }
+            App.addProduct({ name, category, shelfLife, purchaseDate: mfgDate, mfgDate, emoji: CATEGORY_EMOJIS[category] || '📦' });
+            document.getElementById('ocrResult').classList.add('hidden');
+            document.getElementById('scanPreview').classList.add('hidden');
+            this.closeScan();
+        });
+
+        // Mobile menu
+        document.getElementById('mobileMenuBtn').addEventListener('click', () => {
+            document.getElementById('mobileMenu').classList.toggle('hidden');
+        });
+        document.querySelectorAll('.mobile-link').forEach(link => {
+            link.addEventListener('click', () => document.getElementById('mobileMenu').classList.add('hidden'));
+        });
+    },
+
+    async openCamera() {
+        try {
+            const preview = document.getElementById('scanPreview');
+            const video = document.getElementById('cameraFeed');
+            const img = document.getElementById('uploadedImage');
+            preview.classList.remove('hidden');
+            img.classList.add('hidden');
+            video.classList.remove('hidden');
+            document.getElementById('scanOverlay').classList.remove('hidden');
+            document.getElementById('scanStatus').innerHTML = '<iconify-icon icon="solar:loading-bold" class="animate-spin"></iconify-icon> Camera ready — point at label';
+            document.getElementById('captureBtn').style.display = '';
+            cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode:'environment' } });
+            video.srcObject = cameraStream;
+        } catch (err) {
+            showToast('Camera access denied. Try uploading an image instead.', 'error');
+        }
+    },
+
+    captureImage() {
+        const video = document.getElementById('cameraFeed');
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth || 640;
+        canvas.height = video.videoHeight || 480;
+        canvas.getContext('2d').drawImage(video, 0, 0);
+        this.processScan(canvas.toDataURL('image/jpeg'));
+    },
+
+    handleUpload(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            const preview = document.getElementById('scanPreview');
+            const img = document.getElementById('uploadedImage');
+            const video = document.getElementById('cameraFeed');
+            preview.classList.remove('hidden');
+            video.classList.add('hidden');
+            img.classList.remove('hidden');
+            img.src = ev.target.result;
+            document.getElementById('captureBtn').style.display = 'none';
+            this.stopCamera();
+            this.processScan(ev.target.result);
+        };
+        reader.readAsDataURL(file);
+        e.target.value = '';
+    },
+
+    processScan(imageData) {
+        const overlay = document.getElementById('scanOverlay');
+        const statusEl = document.getElementById('scanStatus');
+        overlay.classList.remove('hidden');
+        statusEl.innerHTML = '<iconify-icon icon="solar:loading-bold" class="animate-spin"></iconify-icon> Scanning label with OCR...';
+
+        // Simulate OCR processing (in production, Tesseract.js would run here)
+        setTimeout(() => {
+            overlay.classList.add('hidden');
+            statusEl.innerHTML = '<iconify-icon icon="solar:check-circle-bold" class="text-fresh-400"></iconify-icon> Date detected!';
+            // Show OCR result form with simulated data
+            const randomPast = new Date();
+            randomPast.setMonth(randomPast.getMonth() - Math.floor(Math.random() * 6 + 1));
+            const mfgStr = randomPast.toISOString().split('T')[0];
+            document.getElementById('ocrName').value = '';
+            document.getElementById('ocrMfgDate').value = mfgStr;
+            document.getElementById('ocrShelfLife').value = Math.floor(Math.random() * 300 + 60);
+            document.getElementById('ocrResult').classList.remove('hidden');
+            showToast('Date detected! Please confirm the details.', 'success');
+        }, 2500);
+    },
+
+    closeScan() {
+        this.stopCamera();
+        document.getElementById('scanPreview').classList.add('hidden');
+        document.getElementById('ocrResult').classList.add('hidden');
+    },
+
+    stopCamera() {
+        if (cameraStream) {
+            cameraStream.getTracks().forEach(t => t.stop());
+            cameraStream = null;
+        }
+    }
+};
+
+// ==========================================
+// SCROLL ANIMATIONS & NAV
+// ==========================================
+// Navbar background on scroll
+window.addEventListener('scroll', () => {
+    const nav = document.getElementById('navbar');
+    if (window.scrollY > 50) {
+        nav.style.background = 'rgba(10,10,10,0.85)';
+        nav.style.backdropFilter = 'blur(20px)';
+        nav.style.borderBottom = '1px solid rgba(255,255,255,0.05)';
+    } else {
+        nav.style.background = 'transparent';
+        nav.style.backdropFilter = 'none';
+        nav.style.borderBottom = 'none';
+    }
+});
+
+// Reveal on scroll
+const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            entry.target.classList.add('active');
+        }
+    });
+}, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// ==========================================
+// INITIALIZE
+// ==========================================
+document.addEventListener('DOMContentLoaded', () => App.init());
+</script>
+</body>
+</html>

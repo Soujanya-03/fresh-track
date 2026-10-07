@@ -1,0 +1,2158 @@
+[cite: 1]<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FreshTrack | Smart Expiry Management</title>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: linear-gradient(135deg, #010205, #020103); min-height: 100vh; padding: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        .login-container { display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .login-card { background: rgb(225, 217, 217); border-radius: 10px; padding: 30px; width: 100%; max-width: 400px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .login-header { text-align: center; margin-bottom: 30px; }
+        .login-header h1 { color: #1031c4; font-size: 2rem; margin-bottom: 10px; }
+        .login-header p { color: #535252; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; color: #555; }
+        input, select, textarea { width: 100%; padding: 12px; border: 1px solid #2a0c7d; border-radius: 5px; font-size: 16px; }
+        textarea { resize: vertical; min-height: 80px; }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: #1e2d6b; box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2); }
+        .btn { background: linear-gradient(135deg, #070f32, #764ba2); color: rgb(56, 31, 31); border: none; padding: 12px 20px; border-radius: 20px; cursor: pointer; margin-top: 10px; font-weight: 600; width: 100%; font-size: 16px; }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4); }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn-secondary { background: linear-gradient(135deg, #26de81, #20bf6b); }
+        .btn-donate { background: linear-gradient(135deg, #f39c12, #e67e22); }
+        .btn-danger { background: linear-gradient(135deg, #d11929, #d53030); }
+        .btn-info { background: linear-gradient(135deg, #3498db, #2980b9); }
+        .btn-camera { background: linear-gradient(135deg, #2e86de, #54a0ff); }
+        .btn-upload { background: linear-gradient(135deg, #00d2d3, #01a3a4); }
+        .btn-manual { background: linear-gradient(135deg, #a55eea, #8854d0); }
+        .btn-analytics { background: linear-gradient(135deg, #f093fb, #f5576c); }
+        .btn-small { padding: 8px 15px; font-size: 14px; width: auto; }
+        .error-message { color: #ff4757; margin-top: 10px; text-align: center; display: none; }
+        .remember-me { display: flex; align-items: center; margin-bottom: 20px; }
+        .remember-me input { width: auto; margin-right: 8px; }
+        .main-app { display: none; }
+        header { text-align: center; color: rgb(115, 71, 71); margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+        header h1 { font-size: 2rem; margin-bottom: 10px; }
+        .user-info { display: flex; align-items: center; color: rgb(94, 42, 42); gap: 15px; }
+        .user-info span { margin-right: 15px; }
+        .logout-btn { background: rgba(255, 255, 255, 0.2); color: rgb(117, 39, 39); border: none; padding: 8px 15px; border-radius: 20px; cursor: pointer; font-weight: 600; }
+        .logout-btn:hover { background: rgba(255, 255, 255, 0.3); }
+        .main-content { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        @media (max-width: 768px) { .main-content { grid-template-columns: 1fr; } }
+        .card { background: white; border-radius: 10px; padding: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .upload-area { border: 2px dashed #20348f; border-radius: 8px; padding: 30px; text-align: center; cursor: pointer; background: #f8f9ff; }
+        .upload-area:hover { background: #eef0ff; }
+        .upload-icon { font-size: 2.5rem; color: #25398f; margin-bottom: 10px; }
+        .image-preview { margin-top: 15px; display: none; }
+        .preview-img { width: 100%; max-height: 250px; object-fit: contain; border-radius: 8px; }
+        .loading { display: none; text-align: center; margin-top: 15px; }
+        .spinner { border: 3px solid #f3f3f3; border-top: 3px solid #0e2178; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 0 auto 10px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .detected-info { background: #f0f4ff; border-radius: 8px; padding: 15px; margin-top: 15px; display: none; }
+        .product-list { max-height: 400px; overflow-y: auto; }
+        .product-item { background: #f8f9fa; border-radius: 8px; padding: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .product-name { font-weight: 600; margin-bottom: 5px; }
+        .product-dates { font-size: 0.9rem; color: #666; }
+        .product-status { padding: 5px 10px; border-radius: 15px; font-size: 0.8rem; font-weight: 600; }
+        .status-expired { background: #c01422; color: white; }
+        .status-warning { background: #ffa502; color: white; }
+        .status-good { background: #26de81; color: white; }
+        .notification { position: fixed; top: 20px; right: 20px; padding: 15px; border-radius: 8px; color: white; font-weight: 600; transform: translateX(400px); transition: transform 0.3s; z-index: 1000; max-width: 350px; }
+        .notification.show { transform: translateX(0); }
+        .notification.warning { background: #ffa502; }
+        .notification.danger { background: #ff4757; }
+        .notification.success { background: #068747; }
+        .notification.donation { background: #f39c12; }
+        .notification.info { background: #3498db; }
+        .delete-btn { background: #74020b; color: white; border: none; padding: 3px 8px; border-radius: 4px; cursor: pointer; margin-left: 8px; }
+        .empty-state { text-align: center; padding: 30px; color: #999; }
+        .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; }
+        .stat-card { background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 10px; border-radius: 8px; text-align: center; }
+        .stat-number { font-size: 1.5rem; font-weight: bold; }
+        .stat-label { font-size: 0.8rem; }
+        .camera-container { display: none; position: relative; margin-top: 15px; }
+        .camera-view { width: 100%; max-height: 300px; object-fit: cover; border-radius: 8px; background: #000; }
+        .camera-controls { display: flex; justify-content: center; gap: 10px; margin-top: 10px; }
+        .capture-btn { background: #280363; color: white; border: none; width: 60px; height: 60px; border-radius: 50%; cursor: pointer; font-size: 24px; display: flex; align-items: center; justify-content: center; }
+        .capture-btn:hover { background: #ff3838; }
+        .capture-btn.scanning { background: #ffa502; animation: pulse 1.5s infinite; }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        .cancel-camera-btn { background: #666; color: white; border: none; padding: 10px 15px; border-radius: 20px; cursor: pointer; font-weight: 600; }
+        .camera-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; }
+        .scan-frame { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 200px; height: 100px; border: 2px solid #26de81; border-radius: 8px; }
+        .scan-result { position: absolute; bottom: 10px; left: 10px; right: 10px; background: rgba(0,0,0,0.7); color: white; padding: 10px; border-radius: 5px; font-size: 0.9rem; display: none; }
+        .tab-nav { display: flex; margin-bottom: 20px; border-bottom: 1px solid #eee; }
+        .tab-btn { background: none; border: none; padding: 10px 15px; cursor: pointer; font-weight: 600; color: #666; border-bottom: 2px solid transparent; }
+        .tab-btn.active { color: #091b69; border-bottom-color: #04197a; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); }
+        .modal-content { background-color: white; margin: 5% auto; padding: 20px; border-radius: 10px; width: 80%; max-width: 500px; position: relative; }
+        .close { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
+        .close:hover { color: black; }
+        .donation-form { margin-top: 20px; }
+        .donation-list { margin-top: 20px; max-height: 300px; overflow-y: auto; }
+        .donation-item { background: #f8f9fa; border-radius: 8px; padding: 12px; margin-bottom: 10px; border-left: 4px solid #f39c12; }
+        .donation-title { font-weight: 600; margin-bottom: 5px; }
+        .donation-details { font-size: 0.9rem; color: #666; margin-bottom: 5px; }
+        .donation-contact { font-size: 0.8rem; color: #f39c12; }
+        .donation-timestamp { font-size: 0.8rem; color: #999; text-align: right; }
+        .donation-actions { display: flex; gap: 10px; margin-top: 10px; }
+        .interest-btn { padding: 5px 10px; border-radius: 15px; font-size: 0.8rem; font-weight: 600; border: none; cursor: pointer; }
+        .interest-yes { background: #12d775; color: white; }
+        .interest-no { background: #e13846; color: white; }
+        .interest-claimed { background: #666; color: white; }
+        .donate-btn-container { position: fixed; bottom: 20px; right: 20px; z-index: 100; }
+        .donate-btn { background: linear-gradient(135deg, #f39c12, #e67e22); color: white; border: none; width: 60px; height: 60px; border-radius: 50%; cursor: pointer; font-size: 24px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center; }
+        .donate-btn:hover { transform: scale(1.1); }
+        .scan-options { display: flex; gap: 10px; margin-top: 15px; }
+        .scan-option-btn { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 5px; background: white; cursor: pointer; font-weight: 600; display: flex; flex-direction: column; align-items: center; gap: 5px; }
+        .scan-option-btn:hover { background: #f8f9ff; }
+        .scan-option-btn.active { background: #eef0ff; border-color: #1b37af; }
+        .scan-option-icon { font-size: 1.5rem; }
+        .claim-list { max-height: 300px; overflow-y: auto; margin-top: 15px; }
+        .claim-item { background: #f8f9fa; border-radius: 8px; padding: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .claim-info { flex: 1; }
+        .claim-name { font-weight: 600; margin-bottom: 5px; }
+        .claim-contact { font-size: 0.9rem; color: #666; }
+        .claim-actions { display: flex; gap: 10px; }
+        .analytics-container { margin-top: 20px; }
+        .search-container { margin-bottom: 20px; }
+        .search-box { position: relative; }
+        .search-input { width: 100%; padding: 12px 40px 12px 15px; border: 1px solid #ddd; border-radius: 25px; font-size: 16px; }
+        .search-icon { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: #666; }
+        .chart-container { position: relative; height: 300px; margin-bottom: 20px; }
+        .demand-indicator { display: flex; align-items: center; margin-top: 10px; }
+        .demand-level { width: 20px; height: 20px; border-radius: 50%; margin-right: 10px; }
+        .demand-high { background-color: #e91f30; }
+        .demand-medium { background-color: #ffa502; }
+        .demand-low { background-color: #26de81; }
+        .product-details { background: #f8f9fa; border-radius: 8px; padding: 15px; margin-top: 15px; }
+        .product-details h3 { margin-bottom: 10px; color: #333; }
+        .product-details p { margin-bottom: 5px; color: #666; }
+        .product-details .demand-indicator { margin-bottom: 10px; }
+        .category-filters { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
+        .category-filter { background: #f0f4ff; border: 1px solid #ddd; border-radius: 20px; padding: 5px 15px; cursor: pointer; }
+        .category-filter.active { background: #1b37af; color: white; }
+        .trend-icon { margin-left: 5px; }
+        .reuse-container {
+            padding: 20px;
+        }
+        .reuse-categories {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .reuse-ideas-container {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .reuse-category {
+            margin-bottom: 25px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+        }
+        .reuse-category h3 {
+            color: #1031c4;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #eef0ff;
+            padding-bottom: 8px;
+        }
+        .reuse-subcategory {
+            margin-bottom: 20px;
+        }
+        .reuse-subcategory h4 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+        .reuse-list {
+            list-style-type: none;
+            padding-left: 5px;
+        }
+        .reuse-list li {
+            margin-bottom: 8px;
+            padding-left: 20px;
+            position: relative;
+        }
+        .reuse-list li:before {
+            content: "♻️";
+            position: absolute;
+            left: 0;
+        }
+        .reuse-notice {
+            background: #fff8e1;
+            border-left: 4px solid #ffa502;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        .reuse-notice p {
+            margin: 0;
+            color: #666;
+        }
+        .notification-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #ff4757;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            animation: pulse 2s infinite;
+        }
+        .notification-tab {
+            position: relative;
+        }
+        .notification-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .notification-item {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-left: 4px solid #3498db;
+            transition: all 0.3s ease;
+        }
+        .notification-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .notification-item.unread {
+            background: #e3f2fd;
+            border-left-color: #2196f3;
+        }
+        .notification-message {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        .notification-time {
+            font-size: 0.8rem;
+            color: #666;
+        }
+        .sync-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-left: 10px;
+            animation: pulse 2s infinite;
+        }
+        .sync-indicator.active {
+            background: #26de81;
+        }
+        
+        .sync-indicator.inactive {
+            background: #ffa502;
+        }
+        
+        .notification-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .notification-status {
+            font-size: 0.9rem;
+            color: #666;
+            display: flex;
+            align-items: center;
+        }
+        
+        .demo-warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+        }
+body{background:radial-gradient(circle at 15% 10%,#172554 0,#070b1a 35%,#02030a 75%);color:#182033}
+.main-app{animation:appIn .55s ease}
+@keyframes appIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+header{padding:18px 22px;border:1px solid rgba(255,255,255,.12);border-radius:20px;background:rgba(255,255,255,.07);backdrop-filter:blur(14px);box-shadow:0 18px 45px rgba(0,0,0,.2)}
+header h1{letter-spacing:.2px;text-shadow:0 4px 18px rgba(0,0,0,.25)}
+.main-content{gap:24px}
+.card{border:1px solid #e8ebf5;box-shadow:0 12px 35px rgba(15,23,42,.12);transition:transform .25s,box-shadow .25s}
+.card:hover{transform:translateY(-2px);box-shadow:0 18px 45px rgba(15,23,42,.16)}
+.scan-option-btn{transition:.2s;box-shadow:0 4px 12px rgba(15,23,42,.05)}
+.scan-option-btn:hover{transform:translateY(-2px)}
+.stat-card{min-height:74px;display:flex;flex-direction:column;justify-content:center;box-shadow:0 8px 20px rgba(44,62,120,.18)}
+.premium-dashboard{grid-column:1/-1;background:linear-gradient(145deg,#ffffff,#f7f9ff);border:1px solid #e5e9f5;border-radius:20px;padding:20px;box-shadow:0 15px 40px rgba(15,23,42,.12);margin-top:0}
+.dashboard-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+.dashboard-head h2{font-size:1.35rem;color:#111a42}.dashboard-head p{color:#6b7280;margin-top:4px}
+.dashboard-actions{display:flex;gap:8px;flex-wrap:wrap}.dash-btn{border:0;border-radius:12px;padding:9px 13px;cursor:pointer;font-weight:700;background:#eef2ff;color:#243b8f}.dash-btn:hover{transform:translateY(-1px)}
+.kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:16px}
+.kpi{padding:16px;border-radius:16px;background:#fff;border:1px solid #e8ecf6;position:relative;overflow:hidden}.kpi:after{content:"";position:absolute;right:-20px;bottom:-25px;width:80px;height:80px;border-radius:50%;background:#eef2ff}.kpi-icon{font-size:1.5rem}.kpi-value{font-size:1.65rem;font-weight:800;margin-top:6px;color:#101936}.kpi-label{font-size:.8rem;color:#6b7280;margin-top:3px}
+.dashboard-grid{display:grid;grid-template-columns:1.25fr .75fr;gap:16px}.dash-panel{background:#fff;border:1px solid #e8ecf6;border-radius:16px;padding:16px}.dash-panel h3{font-size:1rem;margin-bottom:12px;color:#172554}.dash-chart{height:245px;position:relative}.risk-list{display:flex;flex-direction:column;gap:9px;max-height:245px;overflow:auto}.risk-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px;border-radius:12px;background:#f8fafc;border:1px solid #eef2f7}.risk-name{font-weight:700}.risk-meta{font-size:.78rem;color:#6b7280;margin-top:2px}.risk-badge{padding:5px 9px;border-radius:999px;font-size:.72rem;font-weight:800;white-space:nowrap}.risk-high{background:#fee2e2;color:#b91c1c}.risk-medium{background:#fef3c7;color:#92400e}.risk-low{background:#dcfce7;color:#166534}.insight-box{margin-top:16px;padding:14px;border-radius:14px;background:linear-gradient(135deg,#eef2ff,#f5f3ff);border:1px solid #e0e7ff}.insight-box strong{color:#283891}.ai-chip{display:inline-flex;align-items:center;gap:5px;padding:4px 8px;border-radius:999px;background:#ede9fe;color:#6d28d9;font-size:.72rem;font-weight:800;margin-top:7px}.recommendation{font-size:.78rem;color:#4b5563;margin-top:5px;line-height:1.35}.product-item{transition:.2s;border:1px solid transparent}.product-item:hover{border-color:#dbe4ff;transform:translateX(2px)}
+.dashboard-note{font-size:.75rem;color:#64748b;margin-top:10px}.empty-dashboard{padding:35px;text-align:center;color:#64748b}
+@media(max-width:900px){.kpi-grid{grid-template-columns:repeat(3,1fr)}.dashboard-grid{grid-template-columns:1fr}}
+@media(max-width:600px){.kpi-grid{grid-template-columns:repeat(2,1fr)}header{align-items:flex-start}.user-info{flex-wrap:wrap;justify-content:flex-end}.premium-dashboard{padding:14px}}
+
+body{background:linear-gradient(135deg,#071b33 0%,#123b56 42%,#0d6b68 100%);background-attachment:fixed;min-height:100vh;}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;background:radial-gradient(circle at 10% 15%,rgba(64,224,177,.18),transparent 28%),radial-gradient(circle at 90% 80%,rgba(88,166,255,.16),transparent 30%);z-index:-1;}
+.login-container{background:linear-gradient(135deg,rgba(4,20,38,.88),rgba(12,77,76,.84))!important;position:relative;overflow:hidden;}
+.login-container:before,.login-container:after{content:"";position:absolute;border-radius:50%;filter:blur(2px);animation:floatOrb 8s ease-in-out infinite;}
+.login-container:before{width:280px;height:280px;background:rgba(67,233,180,.16);top:-80px;left:-80px;}
+.login-container:after{width:360px;height:360px;background:rgba(71,139,255,.16);bottom:-150px;right:-100px;animation-delay:-3s;}
+@keyframes floatOrb{50%{transform:translate(25px,20px) scale(1.08)}}
+.login-card{background:rgba(255,255,255,.96)!important;border:1px solid rgba(255,255,255,.6);box-shadow:0 30px 80px rgba(0,0,0,.35)!important;backdrop-filter:blur(18px);transform:translateY(0);transition:.35s;}
+.login-card:hover{transform:translateY(-5px);box-shadow:0 35px 90px rgba(0,0,0,.42)!important;}
+.fresh-logo{font-size:2.65rem;font-weight:900;letter-spacing:-1px;color:#102a43;margin-bottom:5px}.fresh-logo span,.brand-title span{color:#10a77b}.login-project-name{font-size:.76rem;font-weight:900;letter-spacing:2.5px;color:#168a72;margin-bottom:8px}.login-header p{color:#667085!important}.brand-title{font-size:1.8rem;font-weight:900;color:#102a43}.container.main-app{background:transparent!important}header{background:rgba(255,255,255,.96)!important;border:1px solid rgba(255,255,255,.5);box-shadow:0 12px 35px rgba(0,0,0,.16)!important;backdrop-filter:blur(16px);position:sticky;top:12px;z-index:20}
+.card{background:rgba(255,255,255,.97)!important;box-shadow:0 18px 50px rgba(0,0,0,.13)!important;border:1px solid rgba(255,255,255,.7)!important}.tab-nav{background:linear-gradient(90deg,#effcf7,#f3f7ff)!important;border-radius:15px;padding:6px}.tab-btn{transition:.25s!important}.tab-btn.active{background:linear-gradient(135deg,#0ea77d,#1677c8)!important;color:white!important;box-shadow:0 7px 18px rgba(14,167,125,.25)}
+.premium-dashboard{background:linear-gradient(145deg,#f8fffd,#f5f8ff)!important;border:0!important;position:relative;overflow:hidden}.premium-dashboard:before{content:"";position:absolute;right:-100px;top:-120px;width:300px;height:300px;border-radius:50%;background:linear-gradient(135deg,rgba(16,167,123,.10),rgba(22,119,200,.08));}.dash-kicker{font-size:.68rem;letter-spacing:2px;font-weight:900;color:#10a77b;margin-bottom:5px}.dashboard-head h2{font-size:1.55rem}.dashboard-actions .dash-btn{background:white;border:1px solid #dfe7ef;box-shadow:0 5px 12px rgba(0,0,0,.05);transition:.2s}.dashboard-actions .dash-btn:hover{background:#eafaf5;transform:translateY(-2px)}
+.kpi{position:relative;overflow:hidden;cursor:pointer!important;transition:.25s!important;border:1px solid rgba(255,255,255,.8)!important}.kpi:after{content:"";position:absolute;width:80px;height:80px;border-radius:50%;right:-25px;top:-25px;background:rgba(255,255,255,.18)}.kpi:hover{transform:translateY(-5px) scale(1.01)!important;box-shadow:0 14px 28px rgba(31,41,55,.12)}.kpi:nth-child(1){background:linear-gradient(135deg,#e8f8ff,#dff4ff)}.kpi:nth-child(2){background:linear-gradient(135deg,#e9fff6,#dff8ee)}.kpi:nth-child(3){background:linear-gradient(135deg,#fff8df,#fff0bd)}.kpi:nth-child(4){background:linear-gradient(135deg,#fff0f0,#ffe0e0)}.kpi:nth-child(5){background:linear-gradient(135deg,#f2edff,#e8ddff)}
+.dashboard-grid{grid-template-columns:1fr 1fr}.dash-panel{box-shadow:0 8px 24px rgba(30,41,59,.06);transition:.25s}.dash-panel:hover{box-shadow:0 12px 30px rgba(30,41,59,.09)}.panel-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}.panel-title h3{margin:0}.live-dot{font-size:.68rem;color:#10a77b;font-weight:900}.mini-badge{font-size:.65rem;background:#ede9fe;color:#6d28d9;padding:5px 8px;border-radius:999px;font-weight:900}.dash-chart{height:245px}.chart-center{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;pointer-events:none;transform:translateY(-6px)}.chart-center strong{font-size:1.65rem;color:#102a43}.chart-center span{font-size:.72rem;color:#64748b}.health-bar{height:8px;background:#e9eef3;border-radius:99px;overflow:hidden;margin:5px 10px 9px}.health-bar span{display:block;height:100%;width:0;background:linear-gradient(90deg,#10a77b,#52d9a7);border-radius:99px;transition:width 1s ease}.health-legend{display:flex;justify-content:center;gap:18px;font-size:.72rem;color:#64748b}.risk-row{transition:.2s;cursor:pointer}.risk-row:hover{transform:translateX(4px);background:#f0fdf9;border-color:#c7eee1}.dashboard-lower-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}.quick-actions{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.quick-action{border:1px solid #e4eaf1;background:linear-gradient(145deg,#fff,#f7fafc);border-radius:13px;padding:13px 8px;cursor:pointer;font-weight:800;color:#243b53;transition:.22s;display:flex;flex-direction:column;align-items:center;gap:6px}.quick-action:first-letter{font-size:1.2rem}.quick-action:hover{transform:translateY(-4px);border-color:#bce8da;background:#effcf7;box-shadow:0 8px 18px rgba(16,167,123,.12)}.quick-action span{font-size:.72rem}.summary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.summary-grid>div{padding:13px;border-radius:12px;background:#f8fafc;border:1px solid #edf1f5}.summary-grid span{display:block;font-size:.7rem;color:#64748b;margin-bottom:5px}.summary-grid strong{font-size:1.05rem;color:#132238}.insight-box{background:linear-gradient(135deg,#e9fff6,#edf5ff)!important;border-color:#ccefe3!important}
+@media(max-width:900px){.dashboard-lower-grid{grid-template-columns:1fr}.quick-actions{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:600px){.fresh-logo{font-size:2.1rem}.dashboard-lower-grid{grid-template-columns:1fr}.quick-actions{grid-template-columns:repeat(2,1fr)}.summary-grid{grid-template-columns:1fr}}
+
+.dashboard-controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:4px 0 16px;padding:10px;border-radius:14px;background:rgba(255,255,255,.72);border:1px solid #e6edf4}
+.dashboard-controls input,.dashboard-controls select{width:auto;min-width:180px;padding:10px 12px;border:1px solid #dce5ed;border-radius:10px;background:#fff;font-size:.85rem}
+.dashboard-controls input:focus,.dashboard-controls select:focus{outline:none;border-color:#10a77b;box-shadow:0 0 0 3px rgba(16,167,123,.12)}
+.filter-count{margin-left:auto;font-size:.75rem;font-weight:800;color:#64748b}
+.timeline-panel{margin-top:16px}.timeline-chart{height:230px;position:relative}
+.kpi.pulse{animation:kpiPulse .45s ease}.dash-btn:active,.quick-action:active,.kpi:active{transform:scale(.98)!important}
+@keyframes kpiPulse{50%{transform:translateY(-7px) scale(1.025);box-shadow:0 18px 35px rgba(16,167,123,.18)}}
+@media(max-width:600px){.dashboard-controls input,.dashboard-controls select{width:100%;min-width:0}.filter-count{margin-left:0;width:100%}}
+</style>
+</head>
+<body>
+    <div class="login-container" id="loginPage">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="fresh-logo">🌿 <span>Fresh</span>Track</div>
+                <div class="login-project-name">SMART EXPIRY MANAGEMENT</div>
+                <p>Track • Predict • Reduce Waste</p>
+            </div>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" required placeholder="Enter your username">
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" required placeholder="Enter your password">
+                </div>
+                <div class="remember-me">
+                    <input type="checkbox" id="rememberMe">
+                    <label for="rememberMe">Remember me</label>
+                </div>
+                <button type="submit" class="btn" id="loginBtn">Login</button>
+                <div class="error-message" id="errorMessage">Invalid username or password</div>
+            </form>
+        </div>
+    </div>
+    <div class="container main-app" id="mainApp">
+        <header>
+            <div>
+                <div class="brand-title">🌿 <span>Fresh</span>Track</div>
+                <p>Smart Expiry Management • Scan, Track & Reduce Waste</p>
+            </div>
+            <div class="user-info">
+                <span id="userDisplay">Welcome, User</span>
+                <div class="notification-tab" id="notificationTab">
+                    <button class="logout-btn" id="notificationBtn">🔔</button>
+                    <span class="notification-badge" id="notificationBadge" style="display: none;">0</span>
+                    <span class="sync-indicator inactive" id="syncIndicator" title="Sync status"></span>
+                </div>
+                <button class="logout-btn" id="logoutBtn">Logout</button>
+            </div>
+        </header>
+        <div class="main-content">
+            <div class="card">
+                <h2>Scan Product</h2>
+                <div class="scan-options">
+                    <div class="scan-option-btn active" id="uploadOption">
+                        <div class="scan-option-icon">📁</div>
+                        <div>Upload Image</div>
+                    </div>
+                    <div class="scan-option-btn" id="cameraOption">
+                        <div class="scan-option-icon">📷</div>
+                        <div>Use Camera</div>
+                    </div>
+                    <div class="scan-option-btn" id="manualOption">
+                        <div class="scan-option-icon">✏️</div>
+                        <div>Manual Entry</div>
+                    </div>
+                </div>
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">📷</div>
+                    <p>Click to upload or drag & drop</p>
+                    <input type="file" id="fileInput" accept="image/*">
+                </div>
+                
+                <div class="camera-container" id="cameraContainer">
+                    <video id="cameraView" class="camera-view" autoplay></video>
+                    <div class="camera-overlay">
+                        <div class="scan-frame"></div>
+                        <div class="scan-result" id="scanResult"></div>
+                    </div>
+                    <div class="camera-controls">
+                        <button class="capture-btn" id="captureBtn">📷</button>
+                        <button class="cancel-camera-btn" id="cancelCameraBtn">Cancel</button>
+                    </div>
+                </div>
+                <div class="manual-entry" id="manualEntry" style="display: none;">
+                    <div class="form-group">
+                        <label for="manualProductName">Product Name:</label>
+                        <input type="text" id="manualProductName" placeholder="Enter product name">
+                    </div>
+                    <div class="form-group">
+                        <label for="manualManufactureDate">Manufacture Date:</label>
+                        <input type="date" id="manualManufactureDate">
+                    </div>
+                    <div class="form-group">
+                        <label for="manualShelfLife">Shelf Life:</label>
+                        <select id="manualShelfLife">
+                            <option value="30">30 days</option>
+                            <option value="60">60 days</option>
+                            <option value="90">3 months</option>
+                            <option value="180">6 months</option>
+                            <option value="365">1 year</option>
+                            <option value="custom">Custom</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="manualCustomDaysGroup" style="display: none;">
+                        <label for="manualCustomDays">Custom Days:</label>
+                        <input type="number" id="manualCustomDays" min="1">
+                    </div>
+                    <button class="btn" id="saveManualProduct">Save Product</button>
+                </div>
+                <div class="image-preview" id="imagePreview">
+                    <img id="previewImg" class="preview-img" alt="Product">
+                    <button class="btn" id="scanBtn">Scan for Date</button>
+                </div>
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>Scanning...</p>
+                </div>
+                <div class="detected-info" id="detectedInfo">
+                    <div id="detectedDate"></div>
+                    <div class="form-group">
+                        <label for="productName">Product Name:</label>
+                        <input type="text" id="productName" placeholder="Enter product name">
+                    </div>
+                    <div class="form-group">
+                        <label for="shelfLife">Shelf Life:</label>
+                        <select id="shelfLife">
+                            <option value="30">30 days</option>
+                            <option value="60">60 days</option>
+                            <option value="90">3 months</option>
+                            <option value="180">6 months</option>
+                            <option value="365">1 year</option>
+                            <option value="custom">Custom</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="customDaysGroup" style="display: none;">
+                        <label for="customDays">Custom Days:</label>
+                        <input type="number" id="customDays" min="1">
+                    </div>
+                    <button class="btn" id="saveProduct">Save Product</button>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="tab-nav">
+                    <button class="tab-btn" data-tab="dashboard">📊 Dashboard</button>
+                    <button class="tab-btn active" data-tab="products">Tracked Products</button>
+                    <button class="tab-btn" data-tab="donations">Donations</button>
+                    <button class="tab-btn" data-tab="mydonations">My Donations</button>
+                    <button class="tab-btn" data-tab="analytics">Analytics</button>
+                    <button class="tab-btn" data-tab="reuse">Reuse Ideas</button>
+                </div>
+                <div class="tab-content" id="dashboard-tab">
+                    <div class="premium-dashboard" style="margin:0">
+                        <div class="dashboard-head">
+                            <div><div class="dash-kicker">LIVE INVENTORY COMMAND CENTER</div><h2>Smart Expiry Intelligence</h2><p>Interactive overview of your inventory health, risk and waste-reduction opportunities.</p></div>
+                            <div class="dashboard-actions">
+                                <button class="dash-btn" id="refreshDashboardBtn">🔄 Refresh</button>
+                                <button class="dash-btn" id="exportReportBtn">⬇️ Export CSV</button>
+                            </div>
+                        </div>
+                        <div class="kpi-grid">
+                            <div class="kpi"><div class="kpi-icon">📦</div><div class="kpi-value" id="dashTotal">0</div><div class="kpi-label">Tracked Products</div></div>
+                            <div class="kpi"><div class="kpi-icon">✅</div><div class="kpi-value" id="dashSafe">0</div><div class="kpi-label">Safe Inventory</div></div>
+                            <div class="kpi"><div class="kpi-icon">⏳</div><div class="kpi-value" id="dashSoon">0</div><div class="kpi-label">Expiring ≤ 7 Days</div></div>
+                            <div class="kpi"><div class="kpi-icon">🚨</div><div class="kpi-value" id="dashExpired">0</div><div class="kpi-label">Expired</div></div>
+                            <div class="kpi"><div class="kpi-icon">🎁</div><div class="kpi-value" id="dashDonate">0</div><div class="kpi-label">Donation Candidates</div></div>
+                        </div>
+                        <div class="dashboard-controls">
+                            <input id="dashboardSearch" type="search" placeholder="🔎 Search products...">
+                            <select id="dashboardRiskFilter"><option value="all">All risk levels</option><option value="High">🔴 High risk</option><option value="Medium">🟡 Medium risk</option><option value="Low">🟢 Low risk</option></select>
+                            <select id="dashboardSort"><option value="risk">Sort: Risk first</option><option value="expiry">Sort: Nearest expiry</option><option value="name">Sort: Name A–Z</option></select>
+                            <span class="filter-count" id="dashboardFilterCount">Showing all products</span>
+                        </div>
+                        <div class="dashboard-grid">
+                            <div class="dash-panel chart-panel"><div class="panel-title"><h3>📈 Inventory Health</h3><span class="live-dot">● LIVE</span></div><div class="dash-chart"><canvas id="healthChart"></canvas><div class="chart-center"><strong id="healthPercent">0%</strong><span>healthy</span></div></div><div class="health-bar"><span id="healthBarFill"></span></div><div class="health-legend"><span>🟢 Safe</span><span>🟡 Watch</span><span>🔴 Action</span></div></div>
+                            <div class="dash-panel"><div class="panel-title"><h3>🤖 AI Risk Priorities</h3><span class="mini-badge">SMART</span></div><div class="risk-list" id="riskList"><div class="empty-dashboard">Add products to generate smart priorities.</div></div></div>
+                        </div>
+                        <div class="dashboard-lower-grid">
+                            <div class="dash-panel"><div class="panel-title"><h3>⚡ Quick Actions</h3></div><div class="quick-actions"><button class="quick-action" data-action="products">📦<span>View Inventory</span></button><button class="quick-action" data-action="scan">📷<span>Scan Product</span></button><button class="quick-action" data-action="donations">🎁<span>Donate Soon</span></button><button class="quick-action" data-action="analytics">📊<span>View Analytics</span></button></div></div>
+                            <div class="dash-panel"><div class="panel-title"><h3>🧠 Smart Summary</h3></div><div class="summary-grid"><div><span>Waste Risk</span><strong id="wasteRisk">0%</strong></div><div><span>Urgent Items</span><strong id="urgentItems">0</strong></div><div><span>Best Action</span><strong id="bestAction">Monitor</strong></div></div></div>
+                        </div>
+                        <div class="dash-panel timeline-panel"><div class="panel-title"><h3>🗓️ Expiry Timeline</h3><span class="mini-badge">INTERACTIVE</span></div><div class="timeline-chart"><canvas id="timelineChart"></canvas></div><div class="dashboard-note">Click a bar to open your inventory and focus on that expiry window.</div></div>
+                        <div class="insight-box" id="smartInsight"><strong>💡 Smart Insight:</strong> Your dashboard will generate recommendations from the products you track.</div>
+                        <div class="dashboard-note">AI risk is a rule-based local prediction using expiry proximity, not a medical or food-safety certification.</div>
+                    </div>
+                </div>
+                <div class="tab-content active" id="products-tab">
+                    <div class="stats">
+                        <div class="stat-card">
+                            <div class="stat-number" id="totalProducts">0</div>
+                            <div class="stat-label">Total</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="expiringSoon">0</div>
+                            <div class="stat-label">Expiring Soon</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="expired">0</div>
+                            <div class="stat-label">Expired</div>
+                        </div>
+                    </div>
+                    <div class="product-list" id="productList">
+                        <div class="empty-state">
+                            <div class="upload-icon">📦</div>
+                            <p>No products tracked yet</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-content" id="donations-tab">
+                    <div class="donation-list" id="donationList">
+                        <div class="empty-state">
+                            <div class="upload-icon">🤝</div>
+                            <p>No donations available yet</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-content" id="mydonations-tab">
+                    <div class="donation-list" id="myDonationList">
+                        <div class="empty-state">
+                            <div class="upload-icon">🤝</div>
+                            <p>You haven't made any donations yet</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-content" id="analytics-tab">
+                    <div class="search-container">
+                        <div class="search-box">
+                            <input type="text" id="productSearch" class="search-input" placeholder="Search for a product (e.g., apple, soap, rice)">
+                            <span class="search-icon">🔍</span>
+                        </div>
+                    </div>
+                    <div class="category-filters">
+                        <div class="category-filter active" data-category="all">All</div>
+                        <div class="category-filter" data-category="fruits">Fruits</div>
+                        <div class="category-filter" data-category="vegetables">Vegetables</div>
+                        <div class="category-filter" data-category="masala">Masala Items</div>
+                        <div class="category-filter" data-category="packed">Packed Items</div>
+                        <div class="category-filter" data-category="unpacked">Unpacked Items</div>
+                        <div class="category-filter" data-category="snacks">Snacks</div>
+                        <div class="category-filter" data-category="beverages">Beverages</div>
+                        <div class="category-filter" data-category="personalcare">Personal Care</div>
+                        <div class="category-filter" data-category="cleaning">Cleaning Items</div>
+                        <div class="category-filter" data-category="stationary">Stationary</div>
+                        <div class="category-filter" data-category="electronics">Electronics</div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="demandChart"></canvas>
+                    </div>
+                    <div id="productDetailsContainer">
+                        <div class="empty-state">
+                            <div class="upload-icon">📊</div>
+                            <p>Search for a product to see demand details</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-content" id="reuse-tab">
+                    <div class="reuse-container">
+                        <h2>Natural Ideas for Reusing Expired Products</h2>
+                        
+                        <div class="reuse-categories">
+                            <div class="category-filter active" data-reuse-category="all">All</div>
+                            <div class="category-filter" data-reuse-category="food">Food Products</div>
+                            <div class="category-filter" data-reuse-category="personal">Personal Care</div>
+                            <div class="category-filter" data-reuse-category="household">Household</div>
+                            <div class="category-filter" data-reuse-category="beauty">Beauty & Self-Care</div>
+                        </div>
+                        
+                        <div class="reuse-ideas-container">
+                            <div class="reuse-category" data-category="food">
+                                <h3>Food Products</h3>
+                                <div class="reuse-subcategory">
+                                    <h4>Fruits & Vegetables</h4>
+                                    <ul class="reuse-list">
+                                        <li><strong>Compost:</strong> Create nutrient-rich soil for your garden</li>
+                                        <li><strong>Vinegar production:</strong> Ferment expired fruits to make homemade vinegar</li>
+                                        <li><strong>Natural dyes:</strong> Use beet skins, onion peels, and berry scraps for fabric dyeing</li>
+                                        <li><strong>Face masks:</strong> Mix expired avocado, banana, or yogurt for skin treatments</li>
+                                        <li><strong>Plant food:</strong> Blend vegetable scraps and dilute with water for houseplant fertilizer</li>
+                                    </ul>
+                                </div>
+                                <div class="reuse-subcategory">
+                                    <h4>Breads & Grains</h4>
+                                    <ul class="reuse-list">
+                                        <li><strong>Breadcrumbs:</strong> Dry and blend stale bread for coating or topping</li>
+                                        <li><strong>Croutons:</strong> Cube and season stale bread for salads</li>
+                                        <li><strong>Bread pudding:</strong> Transform expired bread into dessert</li>
+                                        <li><strong>Bird feeders:</strong> Coat bread with peanut butter and seeds for wildlife</li>
+                                        <li><strong>Sensory bins:</strong> Use expired grains for children's sensory play activities</li>
+                                    </ul>
+                                </div>
+                                <div class="reuse-subcategory">
+                                    <h4>Dairy Products</h4>
+                                    <ul class="reuse-list">
+                                        <li><strong>Buttermilk substitute:</strong> Use expired milk for baking recipes</li>
+                                        <li><strong>Cheese making:</strong> Transform slightly soured milk into cottage cheese</li>
+                                        <li><strong>Silver polish:</strong> Expired yogurt can be used to clean silver items</li>
+                                        <li><strong>Garden fertilizer:</strong> Diluted sour milk can provide calcium to plants</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <div class="reuse-category" data-category="personal">
+                                <h3>Personal Care Products</h3>
+                                <div class="reuse-subcategory">
+                                    <h4>Soaps & Detergents</h4>
+                                    <ul class="reuse-list">
+                                        <li><strong>Hand soap:</strong> Grate expired bar soaps and create liquid hand soap</li>
+                                        <li><strong>Laundry soap:</strong> Melt down soap bars for homemade laundry detergent</li>
+                                        <li><strong>Cleaning solution:</strong> Dissolve soap in water for general cleaning</li>
+                                        <li><strong>Carpet cleaner:</strong> Shave soap flakes into warm water for spot cleaning</li>
+                                    </ul>
+                                </div>
+                                <div class="reuse-subcategory">
+                                    <h4>Lotions & Creams</h4>
+                                    <ul class="reuse-list">
+                                        <li><strong>Leather conditioner:</strong> Use expired lotions on leather goods (test first)</li>
+                                        <li><strong>Squeaky door fix:</strong> Apply to door hinges to reduce noise</li>
+                                        <li><strong>Drawer lubricant:</strong> Use on sticky wooden drawers</li>
+                                        <li><strong>Cutting board conditioner:</strong> Apply to wooden cutting boards</li>
+                                    </ul>
+                                </div>
+                                <div class="reuse-subcategory">
+                                    <h4>Toothpaste</h4>
+                                    <ul class="reuse-list">
+                                        <li><strong>Silver polish:</strong> Clean tarnished silver items</li>
+                                        <li><strong>Crayon mark remover:</strong> Remove crayon from walls</li>
+                                        <li><strong>Chrome polish:</strong> Clean bathroom fixtures</li>
+                                        <li><strong>Sneaker cleaner:</strong> Whiten rubber soles of shoes</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <div class="reuse-category" data-category="household">
+                                <h3>Household Products</h3>
+                                <div class="reuse-subcategory">
+                                    <h4>Paper Products</h4>
+                                    <ul class="reuse-list">
+                                        <li><strong>Fire starters:</strong> Shred expired paper for kindling</li>
+                                        <li><strong>Craft materials:</strong> Use for papier-mâché projects</li>
+                                        <li><strong>Garden mulch:</strong> Shred paper and use as weed barrier</li>
+                                        <li><strong>Pet bedding:</strong> Shred for small animal cages</li>
+                                    </ul>
+                                </div>
+                                <div class="reuse-subcategory">
+                                    <h4>Cleaning Products</h4>
+                                    <ul class="reuse-list">
+                                        <li><strong>Outdoor cleaning:</strong> Diluted expired cleaners for patio furniture</li>
+                                        <li><strong>Drain maintenance:</strong> Use expired cleaning solutions for routine drain maintenance</li>
+                                        <li><strong>Weed killer:</strong> Some cleaning solutions can be used to kill weeds between patio stones</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <div class="reuse-category" data-category="beauty">
+                                <h3>Natural Beauty & Self-Care</h3>
+                                <div class="reuse-subcategory">
+                                    <h4>Expired Makeup</h4>
+                                    <ul class="reuse-list">
+                                        <li><strong>Paint for crafts:</strong> Use expired eyeshadows for art projects</li>
+                                        <li><strong>Soap making:</strong> Incorporate expired powders into homemade soaps</li>
+                                        <li><strong>Slime ingredients:</strong> Use in DIY slime recipes for children</li>
+                                    </ul>
+                                </div>
+                                <div class="reuse-subcategory">
+                                    <h4>Expired Perfumes</h4>
+                                    <ul class="reuse-list">
+                                        <li><strong>Scented drawer liners:</strong> Spray on cotton balls and place in drawers</li>
+                                        <li><strong>Room freshener:</strong> Spray on light bulbs for scented rooms when lights are on</li>
+                                        <li><strong>Car freshener:</strong> Spray on felt and place under car seats</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <div class="reuse-notice">
+                                <p><strong>Safety Notice:</strong> Always use common sense and safety precautions when repurposing expired products. When in doubt, it's better to dispose of an item properly than to risk health or safety issues.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="donationModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Donate Product</h2>
+            <div class="donation-form">
+                <div class="form-group">
+                    <label for="donationProductName">Product Name:</label>
+                    <input type="text" id="donationProductName" placeholder="Enter product name">
+                </div>
+                <div class="form-group">
+                    <label for="donationQuantity">Quantity:</label>
+                    <input type="number" id="donationQuantity" min="1" placeholder="Enter quantity">
+                </div>
+                <div class="form-group">
+                    <label for="donationExpiry">Expiry Date:</label>
+                    <input type="date" id="donationExpiry">
+                </div>
+                <div class="form-group">
+                    <label for="donationDescription">Description:</label>
+                    <textarea id="donationDescription" placeholder="Enter product description"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="donationContact">Contact Information:</label>
+                    <input type="text" id="donationContact" placeholder="Email or phone number">
+                </div>
+                <button class="btn btn-donate" id="submitDonation">Submit Donation</button>
+            </div>
+        </div>
+    </div>
+    <div id="claimModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Users Interested in Your Donation</h2>
+            <div class="claim-list" id="claimList">
+                <div class="empty-state">
+                    <div class="upload-icon">👥</div>
+                    <p>No users have shown interest yet</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="notificationModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Notifications</h2>
+            <div class="demo-warning">
+                <strong>⚠️ Demo Mode:</strong> This is a frontend-only demo. For true cross-device notifications, a backend server is required. Currently simulating with localStorage polling.
+            </div>
+            <div class="notification-controls">
+                <div class="notification-status">
+                    <span id="syncStatus">Checking for notifications...</span>
+                    <span class="sync-indicator inactive" id="modalSyncIndicator"></span>
+                </div>
+                <button class="btn btn-small btn-info" id="refreshNotificationsBtn">🔄 Refresh Now</button>
+            </div>
+            <div class="notification-list" id="notificationList">
+                <div class="empty-state">
+                    <div class="upload-icon">🔔</div>
+                    <p>No new notifications</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="donate-btn-container">
+        <button class="donate-btn" id="donateBtn" title="Donate Product">🤝</button>
+    </div>
+    <div class="notification" id="notification"></div>
+    <script>
+        const karnatakaProducts = {
+            fruits: [
+                { name: "Apple", demand: "high", trend: "increasing", companies: ["Washington Apples", "Himalayan Fresh", "Safal"] },
+                { name: "Mango", demand: "high", trend: "stable", companies: ["Alphonso", "Totapuri", "Badami"] },
+                { name: "Banana", demand: "high", trend: "stable", companies: ["Robusta", "Rasthali", "Cavendish"] },
+                { name: "Orange", demand: "medium", trend: "increasing", companies: ["Nagpur Orange", "Coorg Orange", "Kinnow"] },
+                { name: "Grapes", demand: "medium", trend: "stable", companies: ["Bangalore Blue", "Thompson Seedless", "Anab-e-Shahi"] },
+                { name: "Papaya", demand: "medium", trend: "increasing", companies: ["Red Lady", "Pusa Delicious", "Coorg Honey"] },
+                { name: "Pomegranate", demand: "medium", trend: "increasing", companies: ["Bhagawa", "Ganesh", "Ruby"] },
+                { name: "Guava", demand: "low", trend: "stable", companies: ["Allahabad Safeda", "Lucknow-49", "Lalit"] },
+                { name: "Sapota", demand: "low", trend: "stable", companies: ["Cricket Ball", "Kalipatti", "Dholka"] },
+                { name: "Jackfruit", demand: "medium", trend: "increasing", companies: ["Local Farmers", "Organic India", "Naturally Yours"] },
+                { name: "Pineapple", demand: "medium", trend: "stable", companies: ["Kew", "Queen", "Mauritius"] },
+                { name: "Watermelon", demand: "high", trend: "stable", companies: ["Sugar Baby", "Crimson Sweet", "Charleston Gray"] },
+                { name: "Muskmelon", demand: "medium", trend: "stable", companies: ["Hara Madhu", "Pusa Rasraj", "Durgapura Madhu"] },
+                { name: "Sweet Lime", demand: "medium", trend: "stable", companies: ["Pune", "Nagpur", "Coorg"] },
+                { name: "Lemon", demand: "high", trend: "stable", companies: ["Eureka", "Lisbon", "Villafranca"] }
+            ],
+            vegetables: [
+                { name: "Tomato", demand: "high", trend: "stable", companies: ["Local Farmers", "Organic India", "Naturally Yours"] },
+                { name: "Onion", demand: "high", trend: "stable", companies: ["Nasik Onion", "Bangalore Onion", "Maharashtrian Onion"] },
+                { name: "Potato", demand: "high", trend: "stable", companies: ["Aloo", "Kufri", "Chipsona"] },
+                { name: "Carrot", demand: "medium", trend: "increasing", companies: ["Pusa Rudhira", "Nantes", "Danvers"] },
+                { name: "Cabbage", demand: "medium", trend: "stable", companies: ["Golden Acre", "Pusa Cabbage", "Green Express"] },
+                { name: "Cauliflower", demand: "medium", trend: "stable", companies: ["Snowball", "Pusa Snowball", "Early Kunwari"] },
+                { name: "Spinach", demand: "medium", trend: "increasing", companies: ["Palak", "Pusa Bharat", "All Green"] },
+                { name: "Brinjal", demand: "low", trend: "stable", companies: ["Purple Long", "Green Round", "White Egg"] },
+                { name: "Okra", demand: "medium", trend: "stable", companies: ["Pusa Sawani", "Parbhani Kranti", "Varsha Uphar"] },
+                { name: "Bitter Gourd", demand: "low", trend: "stable", companies: ["Coimbatore Local", "Pusa Do Mausami", "Priya"] },
+                { name: "Bottle Gourd", demand: "medium", trend: "stable", companies: ["Pusa Naveen", "Pusa Summer Prolific", "Arka Bahar"] },
+                { name: "Ridge Gourd", demand: "medium", trend: "stable", companies: ["Pusa Barsati", "Coimbatore Local", "Jaipur Long"] },
+                { name: "Pumpkin", demand: "medium", trend: "stable", companies: ["Pusa Vikas", "Arka Suryamukhi", "Local Varieties"] },
+                { name: "Beans", demand: "medium", trend: "stable", companies: ["Contender", "Arka Komal", "Local Varieties"] },
+                { name: "Peas", demand: "medium", trend: "increasing", companies: ["Arkel", "Azad P-1", "Pusa Pragati"] },
+                { name: "Radish", demand: "low", trend: "stable", companies: ["Pusa Chetki", "Japanese White", "Local Varieties"] },
+                { name: "Beetroot", demand: "medium", trend: "increasing", companies: ["Detroit Dark Red", "Crimson Globe", "Local Varieties"] },
+                { name: "Capsicum", demand: "medium", trend: "increasing", companies: ["California Wonder", "Yolo Wonder", "Orobelle"] },
+                { name: "Cucumber", demand: "medium", trend: "stable", companies: ["Pusa Sanyog", "Japanese Long", "Local Varieties"] }
+            ],
+            masala: [
+                { name: "Turmeric Powder", demand: "high", trend: "increasing", companies: ["MTR", "Sakthi", "Aachi"] },
+                { name: "Chili Powder", demand: "high", trend: "stable", companies: ["MTR", "Sakthi", "Aachi"] },
+                { name: "Coriander Powder", demand: "high", trend: "stable", companies: ["MTR", "Sakthi", "Aachi"] },
+                { name: "Cumin Powder", demand: "medium", trend: "increasing", companies: ["MTR", "Sakthi", "Aachi"] },
+                { name: "Garam Masala", demand: "medium", trend: "stable", companies: ["MTR", "Sakthi", "Aachi"] },
+                { name: "Sambar Powder", demand: "high", trend: "stable", companies: ["MTR", "Aachi", "Eastern"] },
+                { name: "Rasam Powder", demand: "medium", trend: "stable", companies: ["MTR", "Aachi", "Eastern"] },
+                { name: "Pepper Powder", demand: "medium", trend: "increasing", companies: ["MTR", "Sakthi", "Aachi"] },
+                { name: "Chicken Masala", demand: "high", trend: "stable", companies: ["MTR", "Aachi", "Eastern"] },
+                { name: "Fish Masala", demand: "medium", trend: "stable", companies: ["MTR", "Aachi", "Eastern"] },
+                { name: "Biryani Masala", demand: "high", trend: "increasing", companies: ["MTR", "Aachi", "Eastern"] },
+                { name: "Pav Bhaji Masala", demand: "medium", trend: "stable", companies: ["MTR", "Aachi", "Eastern"] },
+                { name: "Chat Masala", demand: "medium", trend: "stable", companies: ["MTR", "Aachi", "Eastern"] },
+                { name: "Tea Masala", demand: "medium", trend: "stable", companies: ["MTR", "Aachi", "Eastern"] },
+                { name: "Pickle Masala", demand: "medium", trend: "stable", companies: ["MTR", "Aachi", "Eastern"] }
+            ],
+            packed: [
+                { name: "Rice", demand: "high", trend: "stable", companies: ["India Gate", "Daawat", "Kohinoor"] },
+                { name: "Wheat Flour", demand: "high", trend: "stable", companies: ["Aashirvaad", "Pillsbury", "Nature Fresh"] },
+                { name: "Cooking Oil", demand: "high", trend: "stable", companies: ["Saffola", "Fortune", "Sunpure"] },
+                { name: "Sugar", demand: "high", trend: "stable", companies: ["Madhur", "Parry's", "Bharat"] },
+                { name: "Salt", demand: "high", trend: "stable", companies: ["Tata Salt", "Aashirvaad Salt", "Captain Cook"] },
+                { name: "Pulses", demand: "medium", trend: "stable", companies: ["Tata Sampann", "Aashirvaad", "Eastern"] },
+                { name: "Tea", demand: "high", trend: "stable", companies: ["Taj Mahal", "Red Label", "Tata Tea"] },
+                { name: "Coffee", demand: "medium", trend: "increasing", companies: ["Nescafe", "Bru", "Continental"] },
+                { name: "Biscuits", demand: "high", trend: "stable", companies: ["Parle-G", "Britannia", "Sunfeast"] },
+                { name: "Noodles", demand: "high", trend: "stable", companies: ["Maggi", "Top Ramen", "Wai Wai"] },
+                { name: "Pasta", demand: "medium", trend: "increasing", companies: ["Sunfeast", "Bambino", "MTR"] },
+                { name: "Vermicelli", demand: "medium", trend: "stable", companies: ["MTR", "Bambino", "Anil"] },
+                { name: "Puffed Rice", demand: "medium", trend: "stable", companies: ["MTR", "Aachi", "Eastern"] },
+                { name: "Flattened Rice", demand: "medium", trend: "stable", companies: ["MTR", "Aachi", "Eastern"] },
+                { name: "Ready to Eat", demand: "medium", trend: "increasing", companies: ["MTR", "ITC", "Haldiram's"] }
+            ],
+            unpacked: [
+                { name: "Toor Dal", demand: "high", trend: "stable", companies: ["Local Farmers", "Organic India", "Naturally Yours"] },
+                { name: "Moong Dal", demand: "high", trend: "stable", companies: ["Local Farmers", "Organic India", "Naturally Yours"] },
+                { name: "Urad Dal", demand: "high", trend: "stable", companies: ["Local Farmers", "Organic India", "Naturally Yours"] },
+                { name: "Chana Dal", demand: "high", trend: "stable", companies: ["Local Farmers", "Organic India", "Naturally Yours"] },
+                { name: "Masoor Dal", demand: "medium", trend: "stable", companies: ["Local Farmers", "Organic India", "Naturally Yours"] },
+                { name: "Rava", demand: "high", trend: "stable", companies: ["MTR", "Aachi", "Eastern"] },
+                { name: "Wheat Rava", demand: "medium", trend: "stable", companies: ["MTR", "Aachi", "Eastern"] },
+                { name: "Jaggery", demand: "medium", trend: "stable", companies: ["Local Farmers", "Organic India", "Naturally Yours"] },
+                { name: "Tamarind", demand: "medium", trend: "stable", companies: ["Local Farmers", "Organic India", "Naturally Yours"] },
+                { name: "Coconut", demand: "high", trend: "stable", companies: ["Local Farmers", "Organic India", "Naturally Yours"] },
+                { name: "Groundnut", demand: "medium", trend: "stable", companies: ["Local Farmers", "Organic India", "Naturally Yours"] },
+                { name: "Jowar", demand: "medium", trend: "stable", companies: ["Local Farmers", "Organic India", "Naturally Yours"] },
+                { name: "Bajra", demand: "medium", trend: "stable", companies: ["Local Farmers", "Organic India", "Naturally Yours"] },
+                { name: "Ragi", demand: "medium", trend: "increasing", companies: ["Local Farmers", "Organic India", "Naturally Yours"] },
+                { name: "Foxtail Millet", demand: "medium", trend: "increasing", companies: ["Local Farmers", "Organic India", "Naturally Yours"] }
+            ],
+            snacks: [
+                { name: "Chips", demand: "high", trend: "increasing", companies: ["Lays", "Bingo", "Pringles"] },
+                { name: "Namkeen", demand: "medium", trend: "stable", companies: ["Haldiram's", "Bikano", "Balaji"] },
+                { name: "Chocolate", demand: "high", trend: "increasing", companies: ["Cadbury", "Nestle", "Amul"] },
+                { name: "Sweets", demand: "medium", trend: "stable", companies: ["MTR", "Haldiram's", "Bikano"] },
+                { name: "Ice Cream", demand: "medium", trend: "increasing", companies: ["Amul", "Kwality Walls", "Vadilal"] },
+                { name: "Candy", demand: "low", trend: "stable", companies: ["Parle", "Alpenliebe", "Pulse"] },
+                { name: "Popcorn", demand: "low", trend: "increasing", companies: ["Act II", "Butterkist", "Popz"] },
+                { name: "Cookies", demand: "medium", trend: "stable", companies: ["Britannia", "Parle", "Sunfeast"] },
+                { name: "Mixture", demand: "medium", trend: "stable", companies: ["Haldiram's", "Bikano", "Balaji"] },
+                { name: "Murukku", demand: "medium", trend: "stable", companies: ["Haldiram's", "Bikano", "Balaji"] },
+                { name: "Samosa", demand: "high", trend: "stable", companies: ["Haldiram's", "Bikano", "Local Vendors"] },
+                { name: "Pakora", demand: "medium", trend: "stable", companies: ["Haldiram's", "Bikano", "Local Vendors"] },
+                { name: "Vada", demand: "medium", trend: "stable", companies: ["Haldiram's", "Bikano", "Local Vendors"] },
+                { name: "Bhujia", demand: "medium", trend: "stable", companies: ["Haldiram's", "Bikano", "Balaji"] },
+                { name: "Sev", demand: "medium", trend: "stable", companies: ["Haldiram's", "Bikano", "Balaji"] }
+            ],
+            beverages: [
+                { name: "Soft Drinks", demand: "high", trend: "stable", companies: ["Coca-Cola", "Pepsi", "Thums Up"] },
+                { name: "Fruit Juice", demand: "medium", trend: "increasing", companies: ["Tropicana", "Real", "Minute Maid"] },
+                { name: "Energy Drinks", demand: "medium", trend: "increasing", companies: ["Red Bull", "Monster", "Sting"] },
+                { name: "Buttermilk", demand: "medium", trend: "stable", companies: ["Amul", "Nandini", "Local Brands"] },
+                { name: "Lassi", demand: "medium", trend: "stable", companies: ["Amul", "Nandini", "Local Brands"] },
+                { name: "Coconut Water", demand: "medium", trend: "increasing", companies: ["Cocojal", "Real", "Local Brands"] },
+                { name: "Sugarcane Juice", demand: "medium", trend: "stable", companies: ["Local Vendors", "Organic India", "Naturally Yours"] },
+                { name: "Lemonade", demand: "medium", trend: "stable", companies: ["Local Vendors", "Organic India", "Naturally Yours"] },
+                { name: "Milkshake", demand: "medium", trend: "stable", companies: ["Amul", "Nandini", "Local Brands"] },
+                { name: "Cold Coffee", demand: "medium", trend: "increasing", companies: ["Café Coffee Day", "Starbucks", "Local Cafes"] }
+            ],
+            personalcare: [
+                { name: "Soap", demand: "high", trend: "stable", companies: ["Lifebuoy", "Dove", "Lux"] },
+                { name: "Shampoo", demand: "high", trend: "stable", companies: ["Dove", "Pantene", "Clinic Plus"] },
+                { name: "Toothpaste", demand: "high", trend: "stable", companies: ["Colgate", "Pepsodent", "Close-Up"] },
+                { name: "Hair Oil", demand: "medium", trend: "stable", companies: ["Parachute", "Dabur", "Himalaya"] },
+                { name: "Face Cream", demand: "medium", trend: "increasing", companies: ["Fair & Lovely", "Ponds", "Lakme"] },
+                { name: "Perfume", demand: "low", trend: "stable", companies: ["Park Avenue", "Fogg", "Wild Stone"] },
+                { name: "Deodorant", demand: "medium", trend: "increasing", companies: ["Axe", "Wild Stone", "Park Avenue"] },
+                { name: "Face Wash", demand: "medium", trend: "increasing", companies: ["Himalaya", "Neutrogena", "Clean & Clear"] },
+                { name: "Body Lotion", demand: "medium", trend: "stable", companies: ["Nivea", "Dove", "Vaseline"] },
+                { name: "Shaving Cream", demand: "medium", trend: "stable", companies: ["Gillette", "Axe", "Park Avenue"] },
+                { name: "Razor", demand: "medium", trend: "stable", companies: ["Gillette", "Astra", "Park Avenue"] },
+                { name: "Comb", demand: "low", trend: "stable", companies: ["Vega", "Local Brands"] },
+                { name: "Toothbrush", demand: "medium", trend: "stable", companies: ["Colgate", "Oral-B", "Sensodyne"] },
+                { name: "Talcum Powder", demand: "medium", trend: "stable", companies: ["Ponds", "Dove", "Nivea"] },
+                { name: "Sanitary Napkins", demand: "medium", trend: "increasing", companies: ["Whisper", "Stayfree", "Sofy"] }
+            ],
+            cleaning: [
+                { name: "Detergent", demand: "high", trend: "stable", companies: ["Surf Excel", "Ariel", "Tide"] },
+                { name: "Dishwash", demand: "high", trend: "stable", companies: ["Vim", "Pril", "Joy"] },
+                { name: "Floor Cleaner", demand: "medium", trend: "stable", companies: ["Harpic", "Domex", "Lizol"] },
+                { name: "Toilet Cleaner", demand: "medium", trend: "stable", companies: ["Harpic", "Domex", "Lizol"] },
+                { name: "Glass Cleaner", demand: "medium", trend: "stable", companies: ["Colin", "Local Brands"] },
+                { name: "Phenyl", demand: "medium", trend: "stable", companies: ["Harpic", "Local Brands"] },
+                { name: "Bleach", demand: "medium", trend: "stable", companies: ["Harpic", "Local Brands"] },
+                { name: "Air Freshener", demand: "medium", trend: "increasing", companies: ["Ambi Pur", "Godrej", "Local Brands"] },
+                { name: "Mosquito Repellent", demand: "medium", trend: "stable", companies: ["All Out", "Good Knight", "Mortein"] },
+                { name: "Baking Soda", demand: "medium", trend: "stable", companies: ["Local Brands"] }
+            ],
+            stationary: [
+                { name: "Notebooks", demand: "high", trend: "stable", companies: ["Classmate", "Camlin", "Navneet"] },
+                { name: "Pens", demand: "high", trend: "stable", companies: ["Reynolds", "Pilot", "Cello"] },
+                { name: "Pencils", demand: "high", trend: "stable", companies: ["Apsara", "Nataraj", "Camlin"] },
+                { name: "Erasers", demand: "medium", trend: "stable", companies: ["Apsara", "Faber-Castell", "Camlin"] },
+                { name: "Sharpeners", demand: "medium", trend: "stable", companies: ["Apsara", "Faber-Castell", "Camlin"] },
+                { name: "Rulers", demand: "medium", trend: "stable", companies: ["Apsara", "Faber-Castell", "Camlin"] },
+                { name: "Geometry Box", demand: "medium", trend: "stable", companies: ["Apsara", "Faber-Castell", "Camlin"] },
+                { name: "Crayons", demand: "medium", trend: "stable", companies: ["Camlin", "Faber-Castell", "Crayola"] },
+                { name: "Water Colors", demand: "medium", trend: "stable", companies: ["Camlin", "Faber-Castell", "Crayola"] },
+                { name: "Sketch Pens", demand: "medium", trend: "stable", companies: ["Camlin", "Faber-Castell", "Crayola"] },
+                { name: "Glue", demand: "medium", trend: "stable", companies: ["Fevicol", "Camlin", "Faber-Castell"] },
+                { name: "Scissors", demand: "medium", trend: "stable", companies: ["Faber-Castell", "Local Brands"] },
+                { name: "Files", demand: "medium", trend: "stable", companies: ["Kangaro", "Local Brands"] },
+                { name: "Folders", demand: "medium", trend: "stable", companies: ["Kangaro", "Local Brands"] },
+                { name: "School Bags", demand: "medium", trend: "stable", companies: ["Skybags", "Wildcraft", "Local Brands"] }
+            ],
+            electronics: [
+                { name: "Smartphone", demand: "high", trend: "increasing", companies: ["Samsung", "Xiaomi", "OnePlus"] },
+                { name: "Laptop", demand: "medium", trend: "stable", companies: ["Dell", "HP", "Lenovo"] },
+                { name: "Television", demand: "medium", trend: "stable", companies: ["Samsung", "LG", "Sony"] },
+                { name: "Refrigerator", demand: "medium", trend: "stable", companies: ["Samsung", "LG", "Whirlpool"] },
+                { name: "Washing Machine", demand: "medium", trend: "stable", companies: ["Samsung", "LG", "Whirlpool"] },
+                { name: "Air Conditioner", demand: "medium", trend: "increasing", companies: ["Samsung", "LG", "Voltas"] },
+                { name: "Headphones", demand: "medium", trend: "increasing", companies: ["JBL", "Sony", "Boat"] },
+                { name: "Smart Watch", demand: "low", trend: "increasing", companies: ["Samsung", "Apple", "Mi"] },
+                { name: "Tablet", demand: "medium", trend: "stable", companies: ["Samsung", "Apple", "Lenovo"] },
+                { name: "Camera", demand: "low", trend: "stable", companies: ["Canon", "Nikon", "Sony"] },
+                { name: "Speaker", demand: "medium", trend: "stable", companies: ["JBL", "Sony", "Boat"] },
+                { name: "Power Bank", demand: "medium", trend: "increasing", companies: ["Mi", "Anker", "Syska"] },
+                { name: "USB Cable", demand: "high", trend: "stable", companies: ["Mi", "Anker", "Local Brands"] },
+                { name: "Charger", demand: "high", trend: "stable", companies: ["Mi", "Anker", "Local Brands"] },
+                { name: "Earphones", demand: "high", trend: "stable", companies: ["JBL", "Sony", "Boat"] }
+            ]
+        };
+        
+        // Global notification system with simulated cross-device sync
+        class NotificationSystem {
+            constructor() {
+                this.notifications = JSON.parse(localStorage.getItem('globalNotifications')) || [];
+                this.lastSyncTime = parseInt(localStorage.getItem('lastSyncTime')) || 0;
+                this.syncInterval = null;
+                this.username = null;
+            }
+            
+            init(username) {
+                this.username = username;
+                this.startSync();
+                this.updateNotificationBadge();
+            }
+            
+            startSync() {
+                
+                this.syncInterval = setInterval(() => {
+                    this.syncNotifications();
+                }, 5000);
+              
+                this.syncNotifications();
+            }
+            
+            stopSync() {
+                if (this.syncInterval) {
+                    clearInterval(this.syncInterval);
+                    this.syncInterval = null;
+                }
+            }
+            
+            syncNotifications() {
+                const currentNotifications = JSON.parse(localStorage.getItem('globalNotifications')) || [];
+                const currentSyncTime = parseInt(localStorage.getItem('lastSyncTime')) || 0;
+               
+                if (currentSyncTime > this.lastSyncTime) {
+                    const newNotifications = currentNotifications.filter(n => 
+                        n.timestamp > this.lastSyncTime &&
+                        (n.recipient === this.username || n.recipient === 'all')
+                    );
+                    
+                    if (newNotifications.length > 0) {
+                        newNotifications.forEach(notification => {
+                            this.showNotification(notification.message, notification.type);
+                        });
+                    }
+                    
+                    this.notifications = currentNotifications;
+                    this.lastSyncTime = currentSyncTime;
+                    this.updateNotificationBadge();
+                }
+                
+                this.updateSyncIndicator(true);
+            }
+            
+            addNotification(message, type, recipient = 'all', donationId = null) {
+                const notification = {
+                    id: Date.now(),
+                    message,
+                    type,
+                    timestamp: new Date().toISOString(),
+                    recipient,
+                    donationId,
+                    read: false
+                };
+                
+                this.notifications.push(notification);
+                localStorage.setItem('globalNotifications', JSON.stringify(this.notifications));
+                localStorage.setItem('lastSyncTime', Date.now().toString());
+              
+                this.lastSyncTime = Date.now();
+                
+                return notification;
+            }
+            
+            markAsRead(notificationId) {
+                const notification = this.notifications.find(n => n.id === notificationId);
+                if (notification) {
+                    notification.read = true;
+                    localStorage.setItem('globalNotifications', JSON.stringify(this.notifications));
+                }
+            }
+            
+            markAllAsRead() {
+                this.notifications.forEach(n => {
+                    if (n.recipient === this.username || n.recipient === 'all') {
+                        n.read = true;
+                    }
+                });
+                localStorage.setItem('globalNotifications', JSON.stringify(this.notifications));
+                this.updateNotificationBadge();
+            }
+            
+            getUnreadCount() {
+                return this.notifications.filter(n => 
+                    !n.read && 
+                    (n.recipient === this.username || n.recipient === 'all')
+                ).length;
+            }
+            
+            getUserNotifications() {
+                return this.notifications.filter(n => 
+                    n.recipient === this.username || n.recipient === 'all'
+                ).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            }
+            
+            updateNotificationBadge() {
+                const badge = document.getElementById('notificationBadge');
+                const count = this.getUnreadCount();
+                
+                if (count > 0) {
+                    badge.textContent = count;
+                    badge.style.display = 'flex';
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
+            
+            updateSyncIndicator(isActive) {
+                const indicator = document.getElementById('syncIndicator');
+                const modalIndicator = document.getElementById('modalSyncIndicator');
+                const statusText = document.getElementById('syncStatus');
+                
+                if (isActive) {
+                    indicator.className = 'sync-indicator active';
+                    modalIndicator.className = 'sync-indicator active';
+                    if (statusText) statusText.textContent = 'Connected';
+                } else {
+                    indicator.className = 'sync-indicator inactive';
+                    modalIndicator.className = 'sync-indicator inactive';
+                    if (statusText) statusText.textContent = 'Checking...';
+                }
+            }
+            
+            showNotification(message, type) {
+                const notification = document.getElementById('notification');
+                notification.textContent = message;
+                notification.className = `notification ${type}`;
+                notification.classList.add('show');
+                
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                }, 5000);
+            }
+        }
+        
+        const notificationSystem = new NotificationSystem();
+        
+        window.addEventListener('DOMContentLoaded', () => {
+            const isLoggedIn = sessionStorage.getItem('isLoggedIn') === 'true';
+            const username = sessionStorage.getItem('username');
+            if (isLoggedIn && username) {
+                showMainApp(username);
+            }
+        });
+        
+        document.getElementById('loginForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const rememberMe = document.getElementById('rememberMe').checked;
+            const errorMessage = document.getElementById('errorMessage');
+            
+            if (username && password) {
+                sessionStorage.setItem('isLoggedIn', 'true');
+                sessionStorage.setItem('username', username);
+                
+                if (rememberMe) {
+                    localStorage.setItem('rememberedUser', username);
+                }
+                
+                showMainApp(username);
+            } else {
+                errorMessage.style.display = 'block';
+            }
+        });
+        
+        function showMainApp(username) {
+            document.getElementById('loginPage').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'block';
+            document.getElementById('userDisplay').textContent = `Welcome, ${username}`;
+            
+            const rememberedUser = localStorage.getItem('rememberedUser');
+            if (rememberedUser) {
+                document.getElementById('username').value = rememberedUser;
+                document.getElementById('rememberMe').checked = true;
+            }
+            
+            initializeApp(username);
+        }
+        
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            notificationSystem.stopSync();
+            sessionStorage.removeItem('isLoggedIn');
+            sessionStorage.removeItem('username');
+            document.getElementById('loginPage').style.display = 'flex';
+            document.getElementById('mainApp').style.display = 'none';
+            const password = document.getElementById('password');
+            password.value = '';
+            notificationSystem.showNotification('You have been logged out', 'success');
+        });
+        
+        function initializeApp(username) {
+            let products = JSON.parse(localStorage.getItem('scannedProducts')) || [];
+            let donations = JSON.parse(localStorage.getItem('donations')) || [];
+            let detectedManufactureDate = null;
+            notificationSystem.init(username);
+            const notificationModal = document.getElementById('notificationModal');
+            const notificationBtn = document.getElementById('notificationBtn');
+            const notificationCloseBtn = notificationModal.querySelector('.close');
+            const refreshBtn = document.getElementById('refreshNotificationsBtn');
+            
+            notificationBtn.addEventListener('click', () => {
+                notificationModal.style.display = 'block';
+                renderNotifications();
+                notificationSystem.markAllAsRead();
+            });
+            refreshBtn.addEventListener('click', () => {
+                notificationSystem.syncNotifications();
+                renderNotifications();
+                notificationSystem.showNotification('Notifications refreshed', 'info');
+            });
+            notificationCloseBtn.addEventListener('click', () => {
+                notificationModal.style.display = 'none';
+            });
+            window.addEventListener('click', (e) => {
+                if (e.target === notificationModal) {
+                    notificationModal.style.display = 'none';
+                }
+            });
+            function renderNotifications() {
+                const notificationList = document.getElementById('notificationList');
+                const userNotifications = notificationSystem.getUserNotifications();
+                
+                if (userNotifications.length === 0) {
+                    notificationList.innerHTML = `
+                        <div class="empty-state">
+                            <div class="upload-icon">🔔</div>
+                            <p>No new notifications</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                notificationList.innerHTML = '';
+                
+                userNotifications.forEach(notification => {
+                    const notificationItem = document.createElement('div');
+                    notificationItem.className = `notification-item ${notification.read ? '' : 'unread'}`;
+                    
+                    const date = new Date(notification.timestamp);
+                    const formattedDate = date.toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                    
+                    notificationItem.innerHTML = `
+                        <div class="notification-message">${notification.message}</div>
+                        <div class="notification-time">${formattedDate}</div>
+                    `;
+                    
+                    notificationItem.addEventListener('click', () => {
+                        notificationSystem.markAsRead(notification.id);
+                        notificationItem.classList.remove('unread');
+                        notificationSystem.updateNotificationBadge();
+                    });
+                    
+                    notificationList.appendChild(notificationItem);
+                });
+            }
+            
+            const uploadArea = document.getElementById('uploadArea');
+            const fileInput = document.getElementById('fileInput');
+            const imagePreview = document.getElementById('imagePreview');
+            const previewImg = document.getElementById('previewImg');
+            const scanBtn = document.getElementById('scanBtn');
+            const loading = document.getElementById('loading');
+            const detectedInfo = document.getElementById('detectedInfo');
+            const detectedDate = document.getElementById('detectedDate');
+            const shelfLife = document.getElementById('shelfLife');
+            const customDaysGroup = document.getElementById('customDaysGroup');
+            const productList = document.getElementById('productList');
+            const cameraContainer = document.getElementById('cameraContainer');
+            const cameraView = document.getElementById('cameraView');
+            const captureBtn = document.getElementById('captureBtn');
+            const cancelCameraBtn = document.getElementById('cancelCameraBtn');
+            const scanResult = document.getElementById('scanResult');
+            let stream = null;
+            let isScanning = false;
+            
+            const uploadOption = document.getElementById('uploadOption');
+            const cameraOption = document.getElementById('cameraOption');
+            const manualOption = document.getElementById('manualOption');
+            const manualEntry = document.getElementById('manualEntry');
+            const manualShelfLife = document.getElementById('manualShelfLife');
+            const manualCustomDaysGroup = document.getElementById('manualCustomDaysGroup');
+            
+            let demandChart = null;
+            let currentCategory = 'all';
+            
+            const tabBtns = document.querySelectorAll('.tab-btn');
+            tabBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    tabBtns.forEach(b => b.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    btn.classList.add('active');
+                    document.getElementById(`${btn.getAttribute('data-tab')}-tab`).classList.add('active');
+                    
+                    if (btn.getAttribute('data-tab') === 'dashboard') {
+                        initializeSmartDashboard();
+                    } else if (btn.getAttribute('data-tab') === 'donations') {
+                        renderDonations();
+                    } else if (btn.getAttribute('data-tab') === 'mydonations') {
+                        renderMyDonations();
+                    } else if (btn.getAttribute('data-tab') === 'analytics') {
+                        initializeAnalytics();
+                    } else if (btn.getAttribute('data-tab') === 'reuse') {
+                        initializeReuseTab();
+                    }
+                });
+            });
+            
+            uploadOption.addEventListener('click', () => {
+                setActiveScanOption('upload');
+            });
+            
+            cameraOption.addEventListener('click', () => {
+                setActiveScanOption('camera');
+            });
+            
+            manualOption.addEventListener('click', () => {
+                setActiveScanOption('manual');
+            });
+            
+            function setActiveScanOption(option) {
+                uploadOption.classList.remove('active');
+                cameraOption.classList.remove('active');
+                manualOption.classList.remove('active');
+                
+                uploadArea.style.display = 'none';
+                cameraContainer.style.display = 'none';
+                manualEntry.style.display = 'none';
+                imagePreview.style.display = 'none';
+                detectedInfo.style.display = 'none';
+                
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                    stream = null;
+                }
+                
+                isScanning = false;
+                captureBtn.classList.remove('scanning');
+                captureBtn.innerHTML = '📷';
+                scanResult.style.display = 'none';
+                
+                switch(option) {
+                    case 'upload':
+                        uploadOption.classList.add('active');
+                        uploadArea.style.display = 'block';
+                        break;
+                    case 'camera':
+                        cameraOption.classList.add('active');
+                        cameraContainer.style.display = 'block';
+                        startCamera();
+                        break;
+                    case 'manual':
+                        manualOption.classList.add('active');
+                        manualEntry.style.display = 'block';
+                        break;
+                }
+            }
+            
+            async function startCamera() {
+                try {
+                    stream = await navigator.mediaDevices.getUserMedia({ 
+                        video: { 
+                            facingMode: 'environment',
+                            width: { ideal: 1280 },
+                            height: { ideal: 720 }
+                        } 
+                    });
+                    cameraView.srcObject = stream;
+                } catch (error) {
+                    console.error('Error accessing camera:', error);
+                    notificationSystem.showNotification('Unable to access camera', 'danger');
+                    setActiveScanOption('upload');
+                }
+            }
+            
+            captureBtn.addEventListener('click', async () => {
+                if (!isScanning) {
+                    isScanning = true;
+                    captureBtn.classList.add('scanning');
+                    captureBtn.innerHTML = '⏸️';
+                    scanResult.style.display = 'block';
+                    scanResult.textContent = 'Scanning for dates...';
+                    await scanFromCamera();
+                } else {
+                    isScanning = false;
+                    captureBtn.classList.remove('scanning');
+                    captureBtn.innerHTML = '📷';
+                    scanResult.style.display = 'none';
+                }
+            });
+            
+            async function scanFromCamera() {
+                if (!isScanning || !stream) return;
+                
+                try {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = cameraView.videoWidth;
+                    canvas.height = cameraView.videoHeight;
+                    const context = canvas.getContext('2d');
+                    context.drawImage(cameraView, 0, 0, canvas.width, canvas.height);
+                    const imageDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                    
+                    const result = await Tesseract.recognize(
+                        imageDataUrl,
+                        'eng',
+                        { 
+                            logger: m => {
+                                if (m.status === 'recognizing text') {
+                                    scanResult.textContent = `Scanning... ${Math.round(m.progress * 100)}%`;
+                                }
+                            }
+                        }
+                    );
+                    
+                    const dates = extractDates(result.data.text);
+                    if (dates.length > 0) {
+                        detectedManufactureDate = dates[0];
+                        scanResult.innerHTML = `✅ Date detected: ${formatDate(detectedManufactureDate)}<br>Click to use this date`;
+                        scanResult.style.background = 'rgba(38, 222, 129, 0.9)';
+                        isScanning = false;
+                        captureBtn.classList.remove('scanning');
+                        captureBtn.innerHTML = '📷';
+                        
+                        setTimeout(() => {
+                            previewImg.src = imageDataUrl;
+                            imagePreview.style.display = 'block';
+                            detectedDate.textContent = `Detected Date: ${formatDate(detectedManufactureDate)}`;
+                            detectedInfo.style.display = 'block';
+                            scanResult.style.display = 'none';
+                            
+                            if (stream) {
+                                stream.getTracks().forEach(track => track.stop());
+                                stream = null;
+                            }
+                            cameraContainer.style.display = 'none';
+                        }, 1500);
+                    } else {
+                        scanResult.textContent = 'No date found. Keep scanning...';
+                        scanResult.style.background = 'rgba(255, 165, 2, 0.9)';
+                        
+                        if (isScanning) {
+                            setTimeout(() => scanFromCamera(), 1000);
+                        }
+                    }
+                } catch (error) {
+                    console.error('OCR Error:', error);
+                    scanResult.textContent = 'Error scanning. Try again...';
+                    scanResult.style.background = 'rgba(255, 71, 87, 0.9)';
+                    
+                    if (isScanning) {
+                        setTimeout(() => scanFromCamera(), 2000);
+                    }
+                }
+            }
+            
+            cancelCameraBtn.addEventListener('click', () => {
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                    stream = null;
+                }
+                
+                isScanning = false;
+                captureBtn.classList.remove('scanning');
+                captureBtn.innerHTML = '📷';
+                scanResult.style.display = 'none';
+                setActiveScanOption('upload');
+            });
+            
+            manualShelfLife.addEventListener('change', () => {
+                manualCustomDaysGroup.style.display = manualShelfLife.value === 'custom' ? 'block' : 'none';
+            });
+            
+            document.getElementById('saveManualProduct').addEventListener('click', () => {
+                const productName = document.getElementById('manualProductName').value;
+                const manufactureDate = document.getElementById('manualManufactureDate').value;
+                
+                if (!productName || !manufactureDate) {
+                    notificationSystem.showNotification('Please enter product name and manufacture date', 'warning');
+                    return;
+                }
+                
+                let shelfLifeDays = parseInt(manualShelfLife.value);
+                if (manualShelfLife.value === 'custom') {
+                    shelfLifeDays = parseInt(document.getElementById('manualCustomDays').value);
+                    if (!shelfLifeDays || shelfLifeDays < 1) {
+                        notificationSystem.showNotification('Please enter valid shelf life days', 'warning');
+                        return;
+                    }
+                }
+                
+                const expiryDate = new Date(manufactureDate);
+                expiryDate.setDate(expiryDate.getDate() + shelfLifeDays);
+                
+                const product = {
+                    id: Date.now(),
+                    name: productName,
+                    manufactureDate: new Date(manufactureDate).toISOString(),
+                    expiryDate: expiryDate.toISOString(),
+                    shelfLifeDays: shelfLifeDays
+                };
+                
+                products.push(product);
+                localStorage.setItem('scannedProducts', JSON.stringify(products));
+                
+                document.getElementById('manualProductName').value = '';
+                document.getElementById('manualManufactureDate').value = '';
+                document.getElementById('manualCustomDays').value = '';
+                manualShelfLife.value = '30';
+                manualCustomDaysGroup.style.display = 'none';
+                
+                renderProducts();
+                if (typeof updateSmartDashboard === 'function') updateSmartDashboard();
+                checkExpiryNotifications();
+                notificationSystem.showNotification('Product saved successfully!', 'success');
+            });
+            
+            const modal = document.getElementById('donationModal');
+            const donateBtn = document.getElementById('donateBtn');
+            const closeBtn = document.querySelector('.close');
+            
+            donateBtn.addEventListener('click', () => {
+                modal.style.display = 'block';
+            });
+            
+            closeBtn.addEventListener('click', () => {
+                modal.style.display = 'none';
+            });
+            
+            window.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+            
+            const claimModal = document.getElementById('claimModal');
+            const claimCloseBtn = claimModal.querySelector('.close');
+            
+            claimCloseBtn.addEventListener('click', () => {
+                claimModal.style.display = 'none';
+            });
+            
+            window.addEventListener('click', (e) => {
+                if (e.target === claimModal) {
+                    claimModal.style.display = 'none';
+                }
+            });
+            
+            document.getElementById('submitDonation').addEventListener('click', () => {
+                const productName = document.getElementById('donationProductName').value;
+                const quantity = document.getElementById('donationQuantity').value;
+                const expiry = document.getElementById('donationExpiry').value;
+                const description = document.getElementById('donationDescription').value;
+                const contact = document.getElementById('donationContact').value;
+                
+                if (!productName || !quantity || !expiry || !contact) {
+                    notificationSystem.showNotification('Please fill in all required fields', 'warning');
+                    return;
+                }
+                
+                const donation = {
+                    id: Date.now(),
+                    productName,
+                    quantity,
+                    expiry,
+                    description,
+                    contact,
+                    donor: username,
+                    timestamp: new Date().toISOString(),
+                    status: 'available',
+                    interestedUsers: []
+                };
+                
+                donations.push(donation);
+                localStorage.setItem('donations', JSON.stringify(donations));
+                
+                // Create a global notification for all users about new donation
+                notificationSystem.addNotification(
+                    `🎁 New donation available: ${productName} (Quantity: ${quantity})`,
+                    'donation',
+                    'all',
+                    donation.id
+                );
+                
+                document.getElementById('donationProductName').value = '';
+                document.getElementById('donationQuantity').value = '';
+                document.getElementById('donationExpiry').value = '';
+                document.getElementById('donationDescription').value = '';
+                document.getElementById('donationContact').value = '';
+                modal.style.display = 'none';
+                
+                renderDonations();
+                renderMyDonations();
+                notificationSystem.showNotification('Donation submitted successfully!', 'success');
+            });
+            
+            function renderDonations() {
+                const donationList = document.getElementById('donationList');
+                const availableDonations = donations.filter(d => 
+                    d.donor !== username && d.status === 'available'
+                );
+                
+                if (availableDonations.length === 0) {
+                    donationList.innerHTML = `
+                        <div class="empty-state">
+                            <div class="upload-icon">🤝</div>
+                            <p>No donations available yet</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                donationList.innerHTML = '';
+                availableDonations.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                
+                availableDonations.forEach(donation => {
+                    const donationDate = new Date(donation.timestamp);
+                    const expiryDate = new Date(donation.expiry);
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    const daysUntilExpiry = Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24)); 
+                    
+                    let expiryStatus = '';
+                    if (daysUntilExpiry < 0) {
+                        expiryStatus = `<span class="status-expired">Expired</span>`;
+                    } else if (daysUntilExpiry <= 7) {
+                        expiryStatus = `<span class="status-warning">Expires in ${daysUntilExpiry} days</span>`;
+                    } else {
+                        expiryStatus = `<span class="status-good">Expires in ${daysUntilExpiry} days</span>`;
+                    }
+                    
+                    const hasShownInterest = donation.interestedUsers && 
+                        donation.interestedUsers.some(user => user.username === username);
+                    
+                    const donationItem = document.createElement('div');
+                    donationItem.className = 'donation-item';
+                    donationItem.innerHTML = `
+                        <div class="donation-title">${donation.productName} (Quantity: ${donation.quantity})</div>
+                        <div class="donation-details">${donation.description || 'No description provided'}</div>
+                        <div class="donation-details">Expiry: ${formatDate(expiryDate)} ${expiryStatus}</div>
+                        <div class="donation-contact">Contact: ${donation.contact}</div>
+                        <div class="donation-timestamp">Posted by ${donation.donor} on ${formatDate(donationDate)}</div>
+                        <div class="donation-actions">
+                            ${hasShownInterest ? 
+                                `<button class="interest-btn interest-claimed" disabled>You've shown interest</button>` :
+                                `<button class="interest-btn interest-yes" data-id="${donation.id}">I Need This</button>
+                                 <button class="interest-btn interest-no" data-id="${donation.id}">Not Interested</button>`
+                            }
+                        </div>
+                    `;
+                    donationList.appendChild(donationItem);
+                });
+                
+                document.querySelectorAll('.interest-yes').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const donationId = parseInt(e.target.getAttribute('data-id'));
+                        showInterestInDonation(donationId, true);
+                    });
+                });
+                
+                document.querySelectorAll('.interest-no').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const donationId = parseInt(e.target.getAttribute('data-id'));
+                        showInterestInDonation(donationId, false);
+                    });
+                });
+            }
+            
+            function renderMyDonations() {
+                const myDonationList = document.getElementById('myDonationList');
+                const myDonations = donations.filter(d => d.donor === username);
+                
+                if (myDonations.length === 0) {
+                    myDonationList.innerHTML = `
+                        <div class="empty-state">
+                            <div class="upload-icon">🤝</div>
+                            <p>You haven't made any donations yet</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                myDonationList.innerHTML = '';
+                myDonations.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                
+                myDonations.forEach(donation => {
+                    const donationDate = new Date(donation.timestamp);
+                    const expiryDate = new Date(donation.expiry);
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    const daysUntilExpiry = Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24));
+                    
+                    let expiryStatus = '';
+                    if (daysUntilExpiry < 0) {
+                        expiryStatus = `<span class="status-expired">Expired</span>`;
+                    } else if (daysUntilExpiry <= 7) {
+                        expiryStatus = `<span class="status-warning">Expires in ${daysUntilExpiry} days</span>`;
+                    } else {
+                        expiryStatus = `<span class="status-good">Expires in ${daysUntilExpiry} days</span>`;
+                    }
+                    
+                    let statusBadge = '';
+                    if (donation.status === 'claimed') {
+                        statusBadge = `<span class="status-expired">Claimed</span>`;
+                    } else if (donation.interestedUsers && donation.interestedUsers.length > 0) {
+                        statusBadge = `<span class="status-warning">${donation.interestedUsers.length} Interested</span>`;
+                    } else {
+                        statusBadge = `<span class="status-good">Available</span>`;
+                    }
+                    
+                    const donationItem = document.createElement('div');
+                    donationItem.className = 'donation-item';
+                    donationItem.innerHTML = `
+                        <div class="donation-title">${donation.productName} (Quantity: ${donation.quantity}) ${statusBadge}</div>
+                        <div class="donation-details">${donation.description || 'No description provided'}</div>
+                        <div class="donation-details">Expiry: ${formatDate(expiryDate)} ${expiryStatus}</div>
+                        <div class="donation-contact">Contact: ${donation.contact}</div>
+                        <div class="donation-timestamp">Posted on ${formatDate(donationDate)}</div>
+                        <div class="donation-actions">
+                            ${donation.interestedUsers && donation.interestedUsers.length > 0 ? 
+                                `<button class="btn btn-small btn-info view-claims-btn" data-id="${donation.id}">View Interested Users (${donation.interestedUsers.length})</button>` :
+                                `<button class="btn btn-small btn-secondary" disabled>No Interest Yet</button>`
+                            }
+                            <button class="btn btn-small btn-danger delete-donation-btn" data-id="${donation.id}">Delete</button>
+                        </div>
+                    `;
+                    myDonationList.appendChild(donationItem);
+                });
+                
+                document.querySelectorAll('.view-claims-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const donationId = parseInt(e.target.getAttribute('data-id'));
+                        viewDonationClaims(donationId);
+                    });
+                });
+                
+                document.querySelectorAll('.delete-donation-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const donationId = parseInt(e.target.getAttribute('data-id'));
+                        deleteDonation(donationId);
+                    });
+                });
+            }
+            
+            function showInterestInDonation(donationId, interested) {
+                const donation = donations.find(d => d.id === donationId);
+                if (!donation) return;
+                
+                if (!donation.interestedUsers) {
+                    donation.interestedUsers = [];
+                }
+                
+                if (interested) {
+                    const userContact = prompt('Please enter your contact information (phone or email) so the donor can reach you:');
+                    if (!userContact) return;
+                    
+                    donation.interestedUsers.push({
+                        username,
+                        contact: userContact,
+                        timestamp: new Date().toISOString()
+                    });
+                    
+                    notificationSystem.addNotification(
+                        `👤 ${username} is interested in your donation: ${donation.productName}`,
+                        'info',
+                        donation.donor,
+                        donation.id
+                    );
+                    
+                    notificationSystem.showNotification('Your interest has been registered! The donor will be notified.', 'success');
+                } else {
+                    notificationSystem.showNotification('Thank you for your feedback.', 'info');
+                }
+                
+                localStorage.setItem('donations', JSON.stringify(donations));
+                renderDonations();
+            }
+            
+            function viewDonationClaims(donationId) {
+                const donation = donations.find(d => d.id === donationId);
+                if (!donation || !donation.interestedUsers || donation.interestedUsers.length === 0) return;
+                
+                const claimList = document.getElementById('claimList');
+                claimList.innerHTML = '';
+                
+                donation.interestedUsers.forEach(user => {
+                    const claimDate = new Date(user.timestamp);
+                    const claimItem = document.createElement('div');
+                    claimItem.className = 'claim-item';
+                    claimItem.innerHTML = `
+                        <div class="claim-info">
+                            <div class="claim-name">${user.username}</div>
+                            <div class="claim-contact">Contact: ${user.contact}</div>
+                            <div class="donation-timestamp">Expressed interest on ${formatDate(claimDate)}</div>
+                        </div>
+                        <div class="claim-actions">
+                            <button class="btn btn-small btn-secondary mark-claimed-btn" data-donation-id="${donation.id}" data-user="${user.username}">Fulfill to ${user.username}</button>
+                        </div>
+                    `;
+                    claimList.appendChild(claimItem);
+                });
+                
+                document.querySelectorAll('.mark-claimed-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const donationId = parseInt(e.target.getAttribute('data-donation-id'));
+                        const recipient = e.target.getAttribute('data-user');
+                        markDonationAsClaimed(donationId, recipient);
+                    });
+                });
+                
+                claimModal.style.display = 'block';
+            }
+            
+            function markDonationAsClaimed(donationId, recipient) {
+                const donation = donations.find(d => d.id === donationId);
+                if (!donation) return;
+                
+                donation.status = 'claimed';
+                donation.claimedBy = recipient;
+                localStorage.setItem('donations', JSON.stringify(donations));
+                
+                notificationSystem.addNotification(
+                    `🎉 You have been selected to receive ${donation.productName} from ${donation.donor}!`,
+                    'success',
+                    recipient,
+                    donation.id
+                );
+                
+                claimModal.style.display = 'none';
+                renderMyDonations();
+                notificationSystem.showNotification(`Donation marked as fulfilled to ${recipient}!`, 'success');
+            }
+            
+            function deleteDonation(donationId) {
+                if (confirm('Are you sure you want to delete this donation posting?')) {
+                    donations = donations.filter(d => d.id !== donationId);
+                    localStorage.setItem('donations', JSON.stringify(donations));
+                    renderMyDonations();
+                    notificationSystem.showNotification('Donation deleted successfully.', 'info');
+                }
+            }
+            
+            function extractDates(text) {
+                const dateRegexes = [
+                    /\b(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})\b/g,
+                    /\b(\d{2,4})[\/\-\.](\d{1,2})[\/\-\.](\d{1,2})\b/g,
+                    /\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*[\s\-\.]+(\d{1,2})[\s\-\.]+(\d{2,4})\b/gi,
+                    /\b(\d{1,2})[\s\-\.]+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*[\s\-\.]+(\d{2,4})\b/gi
+                ];
+                
+                let foundDates = [];
+                for (let regex of dateRegexes) {
+                    let match;
+                    while ((match = regex.exec(text)) !== null) {
+                        let parsedDate = new Date(match[0]);
+                        if (!isNaN(parsedDate.getTime())) {
+                            foundDates.push(parsedDate);
+                        }
+                    }
+                }
+                return foundDates;
+            }
+            
+            function formatDate(dateObj) {
+                const d = new Date(dateObj);
+                if (isNaN(d.getTime())) return 'Invalid Date';
+                const day = String(d.getDate()).padStart(2, '0');
+                const month = String(d.getMonth() + 1).padStart(2, '0');
+                const year = d.getFullYear();
+                return `${day}/${month}/${year}`;
+            }
+
+            function renderProducts() {
+                const totalProductsEl = document.getElementById('totalProducts');
+                const expiringSoonEl = document.getElementById('expiringSoon');
+                const expiredEl = document.getElementById('expired');
+                
+                totalProductsEl.textContent = products.length;
+                
+                let expiringSoonCount = 0;
+                let expiredCount = 0;
+                
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                
+                if (products.length === 0) {
+                    productList.innerHTML = `
+                        <div class="empty-state">
+                            <div class="upload-icon">📦</div>
+                            <p>No products tracked yet</p>
+                        </div>
+                    `;
+                    expiringSoonEl.textContent = 0;
+                    expiredEl.textContent = 0;
+                    return;
+                }
+                
+                productList.innerHTML = '';
+                
+                products.sort((a, b) => new Date(a.expiryDate) - new Date(b.expiryDate));
+                
+                products.forEach(product => {
+                    const expiry = new Date(product.expiryDate);
+                    const mfg = new Date(product.manufactureDate);
+                    const daysDiff = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24));
+                    
+                    let statusClass = 'status-good';
+                    let statusText = `${daysDiff} days left`;
+                    
+                    if (daysDiff < 0) {
+                        statusClass = 'status-expired';
+                        statusText = 'Expired';
+                        expiredCount++;
+                    } else if (daysDiff <= 7) {
+                        statusClass = 'status-warning';
+                        statusText = `${daysDiff} days left`;
+                        expiringSoonCount++;
+                    }
+                    
+                    const item = document.createElement('div');
+                    item.className = 'product-item';
+                    item.innerHTML = `
+                        <div>
+                            <div class="product-name">${product.name}</div>
+                            <div class="product-dates">MFG: ${formatDate(mfg)} | EXP: ${formatDate(expiry)}</div>
+                        </div>
+                        <div>
+                            <span class="product-status ${statusClass}">${statusText}</span>
+                            <button class="delete-btn" data-id="${product.id}">✕</button>
+                        </div>
+                    `;
+                    productList.appendChild(item);
+                });
+                
+                expiringSoonEl.textContent = expiringSoonCount;
+                expiredEl.textContent = expiredCount;
+                
+                document.querySelectorAll('.delete-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const id = parseInt(e.target.getAttribute('data-id'));
+                        products = products.filter(p => p.id !== id);
+                        localStorage.setItem('scannedProducts', JSON.stringify(products));
+                        renderProducts();
+                        if (typeof updateSmartDashboard === 'function') updateSmartDashboard();
+                        notificationSystem.showNotification('Product removed', 'info');
+                    });
+                });
+            }
+
+            function checkExpiryNotifications() {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                
+                products.forEach(product => {
+                    const expiry = new Date(product.expiryDate);
+                    const daysDiff = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24));
+                    
+                    if (daysDiff === 3) {
+                        notificationSystem.addNotification(
+                            `⏳ Alert: Product "${product.name}" will expire in 3 days! Consider using or donating it.`,
+                            'warning',
+                            username
+                        );
+                    } else if (daysDiff === 0) {
+                        notificationSystem.addNotification(
+                            `🚨 Alert: Product "${product.name}" expires TODAY!`,
+                            'danger',
+                            username
+                        );
+                    }
+                });
+            }
+
+            function initializeSmartDashboard() {
+                updateSmartDashboard();
+            }
+
+            function updateSmartDashboard() {
+                const dashTotal = document.getElementById('dashTotal');
+                const dashSafe = document.getElementById('dashSafe');
+                const dashSoon = document.getElementById('dashSoon');
+                const dashExpired = document.getElementById('dashExpired');
+                const dashDonate = document.getElementById('dashDonate');
+                
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                
+                let safe = 0, soon = 0, exp = 0, donate = 0;
+                
+                products.forEach(p => {
+                    const expiry = new Date(p.expiryDate);
+                    const days = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24));
+                    if (days < 0) exp++;
+                    else if (days <= 7) { soon++; donate++; }
+                    else safe++;
+                });
+                
+                if (dashTotal) dashTotal.textContent = products.length;
+                if (dashSafe) dashSafe.textContent = safe;
+                if (dashSoon) dashSoon.textContent = soon;
+                if (dashExpired) dashExpired.textContent = exp;
+                if (dashDonate) dashDonate.textContent = donate;
+                
+                const healthPercent = products.length > 0 ? Math.round((safe / products.length) * 100) : 100;
+                const healthEl = document.getElementById('healthPercent');
+                const fillEl = document.getElementById('healthBarFill');
+                if (healthEl) healthEl.textContent = `${healthPercent}%`;
+                if (fillEl) fillEl.style.width = `${healthPercent}%`;
+                
+                const wasteRiskEl = document.getElementById('wasteRisk');
+                const urgentEl = document.getElementById('urgentItems');
+                const bestActionEl = document.getElementById('bestAction');
+                
+                const wasteRisk = products.length > 0 ? Math.round(((soon + exp) / products.length) * 100) : 0;
+                if (wasteRiskEl) wasteRiskEl.textContent = `${wasteRisk}%`;
+                if (urgentEl) urgentEl.textContent = soon + exp;
+                if (bestActionEl) {
+                    if (exp > 0) bestActionEl.textContent = "Dispose / Reuse";
+                    else if (soon > 0) bestActionEl.textContent = "Donate / Consume";
+                    else bestActionEl.textContent = "Optimal";
+                }
+                
+                const riskList = document.getElementById('riskList');
+                if (riskList) {
+                    if (products.length === 0) {
+                        riskList.innerHTML = `<div class="empty-dashboard">Add products to generate smart priorities.</div>`;
+                    } else {
+                        riskList.innerHTML = '';
+                        const sorted = [...products].sort((a,b) => new Date(a.expiryDate) - new Date(b.expiryDate));
+                        sorted.slice(0, 5).forEach(p => {
+                            const days = Math.ceil((new Date(p.expiryDate) - today) / (1000 * 60 * 60 * 24));
+                            let badge = '<span class="risk-badge risk-low">Low Risk</span>';
+                            if (days < 0) badge = '<span class="risk-badge risk-high">Expired</span>';
+                            else if (days <= 7) badge = '<span class="risk-badge risk-medium">High Risk</span>';
+                            
+                            const row = document.createElement('div');
+                            row.className = 'risk-row';
+                            row.innerHTML = `
+                                <div>
+                                    <div class="risk-name">${p.name}</div>
+                                    <div class="risk-meta">Expires in ${days} days</div>
+                                </div>
+                                ${badge}
+                            `;
+                            riskList.appendChild(row);
+                        });
+                    }
+                }
+            }
+
+            function initializeAnalytics() {
+                const searchInput = document.getElementById('productSearch');
+                const categoryFilters = document.querySelectorAll('.category-filter[data-category]');
+                
+                categoryFilters.forEach(filter => {
+                    filter.addEventListener('click', () => {
+                        categoryFilters.forEach(f => f.classList.remove('active'));
+                        filter.classList.add('active');
+                        currentCategory = filter.getAttribute('data-category');
+                        renderAnalyticsChart();
+                    });
+                });
+                
+                searchInput.addEventListener('input', (e) => {
+                    const query = e.target.value.toLowerCase().trim();
+                    if (query) {
+                        searchProductAnalytics(query);
+                    } else {
+                        renderAnalyticsChart();
+                    }
+                });
+                
+                renderAnalyticsChart();
+            }
+
+            function renderAnalyticsChart() {
+                const ctx = document.getElementById('demandChart').getContext('2d');
+                const container = document.getElementById('productDetailsContainer');
+                container.innerHTML = `<div class="empty-state"><div class="upload-icon">📊</div><p>Select or search a product to see specific market data</p></div>`;
+                
+                let dataItems = [];
+                if (currentCategory === 'all') {
+                    Object.keys(karnatakaProducts).forEach(cat => {
+                        dataItems = dataItems.concat(karnatakaProducts[cat]);
+                    });
+                } else if (karnatakaProducts[currentCategory]) {
+                    dataItems = karnatakaProducts[currentCategory];
+                }
+                
+                const highCount = dataItems.filter(i => i.demand === 'high').length;
+                const medCount = dataItems.filter(i => i.demand === 'medium').length;
+                const lowCount = dataItems.filter(i => i.demand === 'low').length;
+                
+                if (demandChart) demandChart.destroy();
+                
+                demandChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['High Demand', 'Medium Demand', 'Low Demand'],
+                        datasets: [{
+                            label: 'Product Count',
+                            data: [highCount, medCount, lowCount],
+                            backgroundColor: ['#e91f30', '#ffa502', '#26de81']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            title: { display: true, text: `Demand Analysis (${currentCategory.toUpperCase()})` }
+                        }
+                    }
+                });
+            }
+
+            function searchProductAnalytics(query) {
+                let foundProduct = null;
+                Object.keys(karnatakaProducts).forEach(cat => {
+                    const match = karnatakaProducts[cat].find(p => p.name.toLowerCase().includes(query));
+                    if (match) foundProduct = match;
+                });
+                
+                const container = document.getElementById('productDetailsContainer');
+                if (foundProduct) {
+                    let demandClass = 'demand-low';
+                    if (foundProduct.demand === 'high') demandClass = 'demand-high';
+                    if (foundProduct.demand === 'medium') demandClass = 'demand-medium';
+                    
+                    container.innerHTML = `
+                        <div class="product-details">
+                            <h3>${foundProduct.name}</h3>
+                            <div class="demand-indicator">
+                                <span class="demand-level ${demandClass}"></span>
+                                <strong>Demand: ${foundProduct.demand.toUpperCase()}</strong>
+                            </div>
+                            <p><strong>Market Trend:</strong> ${foundProduct.trend} <span class="trend-icon">${foundProduct.trend === 'increasing' ? '📈' : '➡️'}</span></p>
+                            <p><strong>Popular Brands / Suppliers:</strong> ${foundProduct.companies.join(', ')}</p>
+                        </div>
+                    `;
+                } else {
+                    container.innerHTML = `<div class="empty-state"><div class="upload-icon">❓</div><p>No regional product data found for "${query}"</p></div>`;
+                }
+            }
+
+            function initializeReuseTab() {
+                const reuseFilters = document.querySelectorAll('.category-filter[data-reuse-category]');
+                const categories = document.querySelectorAll('.reuse-category');
+                
+                reuseFilters.forEach(filter => {
+                    filter.addEventListener('click', () => {
+                        reuseFilters.forEach(f => f.classList.remove('active'));
+                        filter.classList.add('active');
+                        
+                        const selectedCategory = filter.getAttribute('data-reuse-category');
+                        
+                        categories.forEach(cat => {
+                            if (selectedCategory === 'all' || cat.getAttribute('data-category') === selectedCategory) {
+                                cat.style.display = 'block';
+                            } else {
+                                cat.style.display = 'none';
+                            }
+                        });
+                    });
+                });
+            }
+
+            // Initial startup steps
+            renderProducts();
+            checkExpiryNotifications();
+        }
+    </script>
+</body>
+</html>
